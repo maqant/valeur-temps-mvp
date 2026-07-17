@@ -7,7 +7,7 @@ import { usePremium } from '../context/PremiumContext';
 
 export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const { t, lang, setLang } = useLanguage();
-  const { isAdFree, purchasePremium } = usePremium();
+  const { isAdFree, showPaywall, showCustomerCenter } = usePremium();
   const [salary, setSalary] = useState('');
   const [hours, setHours] = useState('');
   const [currency, setCurrency] = useState('\u20ac');
@@ -40,10 +40,13 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
 
   const handlePurchase = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const success = await purchasePremium();
-    if (success) {
-      Alert.alert('Premium', t('removeAdsSuccess'));
-    }
+    await showPaywall();
+    // La mise à jour de isAdFree se fait automatiquement via le listener dans PremiumContext
+  };
+
+  const handleManageSubscription = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await showCustomerCenter();
   };
 
   return (
@@ -121,11 +124,18 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
               />
             </View>
 
-            {!isAdFree && (
+            {!isAdFree ? (
               <View style={styles.premiumContainer}>
                 <Text style={styles.premiumTitle}>{t('premiumTitle')}</Text>
                 <TouchableOpacity style={styles.premiumButton} onPress={handlePurchase}>
                   <Text style={styles.premiumButtonText}>{t('removeAdsBtn')}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.premiumContainer}>
+                <Text style={styles.premiumTitle}>{t('premiumActiveTitle') || 'SweatCost Pro Actif 💎'}</Text>
+                <TouchableOpacity style={styles.premiumButton} onPress={handleManageSubscription}>
+                  <Text style={styles.premiumButtonText}>{t('managePurchaseBtn') || 'Gérer mon achat'}</Text>
                 </TouchableOpacity>
               </View>
             )}

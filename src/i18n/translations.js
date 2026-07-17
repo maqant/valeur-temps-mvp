@@ -20,9 +20,11 @@ export const translations = {
     howItWorksBtn: 'Comprendre le calcul 🧮',
     howItWorksTitle: 'Le secret du calcul',
     howItWorksText: 'Pour être précis, on divise votre salaire par vos heures mensuelles. On trouve vos heures mensuelles en multipliant vos heures hebdos par 4,33 (la moyenne des semaines dans un mois : 52 semaines / 12 mois).',
-    premiumTitle: 'Premium',
-    removeAdsBtn: 'Supprimer les pubs à vie',
-    removeAdsSuccess: 'Merci pour votre achat ! Les pubs ont été supprimées.',
+    premiumTitle: "Vous détestez les pubs ?",
+    removeAdsBtn: "Supprimer les pubs à vie",
+    premiumActiveTitle: "SweatCost Pro Actif 💎",
+    managePurchaseBtn: "Gérer mon achat",
+    removeAdsSuccess: "Merci pour votre achat ! Les publicités ont été supprimées.",
 
     // MainScreen — inputs
     priceLabel: 'Ça coûte combien ?',
@@ -72,9 +74,11 @@ export const translations = {
     howItWorksBtn: 'How is this calculated? 🧮',
     howItWorksTitle: 'The math behind the magic',
     howItWorksText: 'To be hyper-accurate, we divide your salary by your monthly hours. We find your monthly hours by multiplying your weekly hours by 4.33 (the average weeks in a month: 52 weeks / 12 months).',
-    premiumTitle: 'Premium',
-    removeAdsBtn: 'Remove ads forever',
-    removeAdsSuccess: 'Thanks for your purchase! Ads have been removed.',
+    premiumTitle: "Hate ads?",
+    removeAdsBtn: "Remove ads forever",
+    premiumActiveTitle: "SweatCost Pro Active 💎",
+    managePurchaseBtn: "Manage my purchase",
+    removeAdsSuccess: "Thank you for your purchase! Ads have been removed.",
 
     // MainScreen — inputs
     priceLabel: 'Price of this whim?',
