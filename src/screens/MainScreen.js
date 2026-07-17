@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme/theme';
@@ -15,10 +15,8 @@ export const MainScreen = () => {
   const [price, setPrice] = useState('');
   const [uses, setUses] = useState('1');
 
-  // Results
-  const [timeCost, setTimeCost] = useState({ days: 0, hours: 0, minutes: 0 });
-  const [costPerUse, setCostPerUse] = useState(0);
-  const [timePerUse, setTimePerUse] = useState({ days: 0, hours: 0, minutes: 0 });
+  // Ref pour throttler les haptics du slider (100ms minimum entre chaque vibration)
+  const lastHapticRef = useRef(0);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -39,39 +37,42 @@ export const MainScreen = () => {
     setSettingsModalVisible(false);
   };
 
-  const updateCalculations = useCallback(() => {
+  // Valeurs dérivées via useMemo — plus besoin de 3 states + useCallback + useEffect
+  const { timeCost, costPerUse, timePerUse } = useMemo(() => {
+    const empty = { days: 0, hours: 0, minutes: 0 };
     if (!settings || !price) {
-      setTimeCost({ days: 0, hours: 0, minutes: 0 });
-      setCostPerUse(0);
-      setTimePerUse({ days: 0, hours: 0, minutes: 0 });
-      return;
+      return { timeCost: empty, costPerUse: 0, timePerUse: empty };
     }
 
     const parsedPrice = parseFloat(price);
     const parsedUses = parseInt(uses) || 1;
 
-    if (isNaN(parsedPrice) || parsedPrice <= 0) return;
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      return { timeCost: empty, costPerUse: 0, timePerUse: empty };
+    }
 
     const hourlyRate = calculateHourlyRate(settings.salary, settings.hours);
     const workDayHours = calculateWorkDayHours(settings.hours);
 
     const totalTime = convertCostToTime(parsedPrice, hourlyRate, workDayHours);
-    setTimeCost(totalTime);
-
     const perUseCost = parsedPrice / parsedUses;
-    setCostPerUse(perUseCost);
-
     const timeForOneUse = convertCostToTime(perUseCost, hourlyRate, workDayHours);
-    setTimePerUse(timeForOneUse);
+
+    return { timeCost: totalTime, costPerUse: perUseCost, timePerUse: timeForOneUse };
   }, [price, uses, settings]);
 
-  useEffect(() => {
-    updateCalculations();
-  }, [updateCalculations]);
-
   const handleSliderChange = (value) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setUses(Math.round(value).toString());
+    const rounded = Math.round(value);
+    // Éviter les re-renders inutiles si la valeur n'a pas changé
+    if (rounded.toString() === uses) return;
+
+    // Throttle haptic : 100ms minimum entre chaque vibration
+    const now = Date.now();
+    if (now - lastHapticRef.current > 100) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      lastHapticRef.current = now;
+    }
+    setUses(rounded.toString());
   };
 
   const formatTimeResult = (time) => {
@@ -88,8 +89,15 @@ export const MainScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.header}>
             <Text style={styles.appTitle}>Your Life Cost</Text>
             <TouchableOpacity onPress={() => setSettingsModalVisible(true)} style={styles.settingsIcon}>
@@ -118,11 +126,9 @@ export const MainScreen = () => {
                 keyboardType="numeric"
                 value={uses}
                 onChangeText={(val) => {
-                  const num = parseInt(val);
-                  setUses(val);
-                  if (num && num > 0) {
-                     // Optionally vibrate on text input as well, but maybe not on every keystroke
-                  }
+                  // Accepter uniquement des chiffres, fallback à '1' si vide
+                  const cleaned = val.replace(/[^0-9]/g, '');
+                  setUses(cleaned || '1');
                 }}
               />
             </View>
@@ -165,10 +171,12 @@ export const MainScreen = () => {
           )}
         </ScrollView>
       </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
 
       <SettingsModal
         visible={settingsModalVisible}
         onSave={handleSaveSettings}
+        onClose={() => setSettingsModalVisible(false)}
         initialData={settings}
       />
     </SafeAreaView>

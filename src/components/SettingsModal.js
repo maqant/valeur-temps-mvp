@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { colors, spacing, borderRadius } from '../theme/theme';
 
-export const SettingsModal = ({ visible, onSave, initialData }) => {
+export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const [salary, setSalary] = useState('');
   const [hours, setHours] = useState('');
 
@@ -26,13 +26,18 @@ export const SettingsModal = ({ visible, onSave, initialData }) => {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true}>
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={() => { if (initialData && onClose) onClose(); }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.container}
         >
           <View style={styles.modalContent}>
+            {initialData && onClose && (
+              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            )}
             <Text style={styles.title}>Configuration</Text>
             <Text style={styles.subtitle}>Pour calculer le coût réel, nous avons besoin de connaître la valeur de votre temps.</Text>
 
@@ -88,6 +93,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 1,
+    padding: 8,
+  },
+  closeButtonText: {
+    color: colors.textSecondary,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   title: {
     color: colors.primary,

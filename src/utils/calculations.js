@@ -15,11 +15,21 @@ export const convertCostToTime = (price, hourlyRate, workDayHours) => {
 
   const totalHours = price / hourlyRate;
 
-  const days = Math.floor(totalHours / workDayHours);
-  const remainingHours = totalHours - (days * workDayHours);
+  let days = Math.floor(totalHours / workDayHours);
+  let remainingHours = totalHours - (days * workDayHours);
 
-  const hours = Math.floor(remainingHours);
-  const minutes = Math.round((remainingHours - hours) * 60);
+  let hours = Math.floor(remainingHours);
+  let minutes = Math.round((remainingHours - hours) * 60);
+
+  // Garde-fou : Math.round peut retourner 60 quand la fraction est ≥ 0.995
+  if (minutes === 60) {
+    minutes = 0;
+    hours += 1;
+  }
+  if (hours >= workDayHours) {
+    hours = 0;
+    days += 1;
+  }
 
   return { days, hours, minutes };
 };
