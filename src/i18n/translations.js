@@ -27,7 +27,7 @@ export const translations = {
     resultMainLabel: 'Ce petit plaisir va te coûter :',
     resultMainSubtext: 'de ta vie au boulot',
     resultCostPerUse: 'Prix par utilisation',
-    resultTimePerUse: 'Temps de travail / utilisation',
+    resultTimePerUse: 'Temps de travail par utilisation',
 
     // MainScreen — empty state
     emptyState: 'Entre un prix pour voir combien de temps tu vas devoir transpirer.',
