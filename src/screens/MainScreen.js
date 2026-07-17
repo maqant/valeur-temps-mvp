@@ -142,7 +142,7 @@ export const MainScreen = () => {
       return { timeCost: empty, costPerUse: 0, timePerUse: empty };
     }
 
-    const hourlyRate = calculateHourlyRate(settings.salary, settings.hours);
+    const hourlyRate = calculateHourlyRate(settings.salary, settings.hours, settings.taxRate || 0);
     const workDayHours = calculateWorkDayHours(settings.hours);
 
     const totalTime = convertCostToTime(parsedPrice, hourlyRate, workDayHours);

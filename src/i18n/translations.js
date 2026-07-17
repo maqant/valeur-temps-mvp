@@ -25,6 +25,7 @@ export const translations = {
     premiumActiveTitle: "SweatCost Pro Actif 💎",
     managePurchaseBtn: "Gérer mon achat",
     removeAdsSuccess: "Merci pour votre achat ! Les publicités ont été supprimées.",
+    taxLabel: "Taxe de la vraie vie (Loyer, factures...)",
 
     // MainScreen — inputs
     priceLabel: 'Ça coûte combien ?',
@@ -79,6 +80,7 @@ export const translations = {
     premiumActiveTitle: "SweatCost Pro Active 💎",
     managePurchaseBtn: "Manage my purchase",
     removeAdsSuccess: "Thank you for your purchase! Ads have been removed.",
+    taxLabel: "Real life tax (Rent, bills...)",
 
     // MainScreen — inputs
     priceLabel: 'Price of this whim?',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme/theme';
+import Slider from '@react-native-community/slider';
 import { useLanguage } from '../i18n/LanguageContext';
 import { usePremium } from '../context/PremiumContext';
 
@@ -9,12 +10,14 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const { t, lang, setLang } = useLanguage();
   const { isAdFree, showPaywall, showCustomerCenter } = usePremium();
   const [salary, setSalary] = useState('');
+  const [taxRate, setTaxRate] = useState(0);
   const [hours, setHours] = useState('');
   const [currency, setCurrency] = useState('\u20ac');
 
   useEffect(() => {
     if (initialData) {
       setSalary(initialData.salary ? initialData.salary.toString() : '');
+      setTaxRate(initialData.taxRate || 0);
       setHours(initialData.hours ? initialData.hours.toString() : '');
       if (initialData.currency) {
         setCurrency(initialData.currency);
@@ -35,8 +38,16 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
     }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onSave({ salary: parsedSalary, hours: parsedHours, lang, currency });
+    onSave({ salary: parsedSalary, hours: parsedHours, lang, currency, taxRate });
   };
+
+  const getTaxEmoji = (rate) => {
+    if (rate <= 30) return '🤑';
+    if (rate <= 60) return '🏠';
+    return '☠️';
+  };
+
+  const parsedSalaryForUI = parseFloat(salary) || 0;
 
   const handlePurchase = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -109,6 +120,32 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                 onChangeText={setSalary}
                 placeholder={t('salaryPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{t('taxLabel') || 'Taxe de la vraie vie (Loyer, factures...)'}</Text>
+              
+              <View style={styles.taxHeader}>
+                <Text style={styles.taxValue}>{taxRate}%</Text>
+                {parsedSalaryForUI > 0 && (
+                  <Text style={styles.taxDeduction}>
+                    - {(parsedSalaryForUI * (taxRate / 100)).toFixed(0)} {currency}
+                  </Text>
+                )}
+                <Text style={styles.taxEmoji}>{getTaxEmoji(taxRate)}</Text>
+              </View>
+
+              <Slider
+                style={{ width: '100%', height: 40 }}
+                minimumValue={0}
+                maximumValue={90}
+                step={1}
+                value={taxRate}
+                onValueChange={setTaxRate}
+                minimumTrackTintColor={colors.secondary}
+                maximumTrackTintColor={colors.surface}
+                thumbTintColor={colors.secondary}
               />
             </View>
 
@@ -218,6 +255,26 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.m,
     padding: spacing.m,
     fontSize: 16,
+  },
+  taxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  taxValue: {
+    color: colors.primary,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  taxDeduction: {
+    color: '#E74C3C',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  taxEmoji: {
+    fontSize: 20,
   },
   langRow: {
     flexDirection: 'row',

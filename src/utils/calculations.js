@@ -1,7 +1,8 @@
-export const calculateHourlyRate = (monthlySalary, hoursPerWeek) => {
+export const calculateHourlyRate = (monthlySalary, hoursPerWeek, taxRate = 0) => {
   if (!monthlySalary || !hoursPerWeek) return 0;
-  // Formule du taux horaire = Salaire mensuel / (Heures par semaine × 4.33).
-  return monthlySalary / (hoursPerWeek * 4.33);
+  const netSalary = monthlySalary * (1 - taxRate / 100);
+  // Formule du taux horaire = Salaire mensuel Net Reste à Vivre / (Heures par semaine × 4.33).
+  return netSalary / (hoursPerWeek * 4.33);
 };
 
 export const calculateWorkDayHours = (hoursPerWeek) => {
