@@ -32,7 +32,9 @@ export const MainScreen = () => {
   // New fun states
   const [showEquivalents, setShowEquivalents] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiKey, setConfettiKey] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
+  const [isCostRevealed, setIsCostRevealed] = useState(false);
 
   // Audio Players
   const kachingPlayer = useAudioPlayer(require('../../assets/sounds/kaching.mp3'));
@@ -154,7 +156,7 @@ export const MainScreen = () => {
   useEffect(() => {
     const manageHeartbeat = () => {
       const currentParsedPrice = parseFloat(price);
-      const isShowingResults = currentParsedPrice > 0;
+      const isShowingResults = currentParsedPrice > 0 && isCostRevealed;
 
       if (isShowingResults && !isSaved) {
         // Trigger Pop Animation
@@ -227,6 +229,7 @@ export const MainScreen = () => {
     // Décalage des confettis pour éviter le lag graphique pendant le changement de Vue
     setTimeout(() => {
       setShowConfetti(true);
+      setConfettiKey(prev => prev + 1);
     }, 150);
 
     if (heartbeatPlayer.playing) {
@@ -237,6 +240,7 @@ export const MainScreen = () => {
     }
 
     // Clameur de la foule
+    cheerPlayer.seekTo(0);
     cheerPlayer.volume = 1.0;
     cheerPlayer.play();
   };
@@ -308,7 +312,12 @@ export const MainScreen = () => {
                   style={styles.priceInput}
                   keyboardType="decimal-pad"
                   value={price}
-                  onChangeText={setPrice}
+                  onChangeText={(val) => {
+                    setPrice(val);
+                    setIsSaved(false);
+                    setShowConfetti(false);
+                    setIsCostRevealed(false);
+                  }}
                   placeholder={t('pricePlaceholder')}
                   placeholderTextColor={colors.textSecondary}
                   maxLength={10}
@@ -336,6 +345,7 @@ export const MainScreen = () => {
                     onSubmitEditing={() => {
                       Keyboard.dismiss();
                       if (parsedPrice > 0) {
+                        setIsCostRevealed(true);
                         playKaching();
                         showInterstitialAdMaybe();
                       }
@@ -351,6 +361,7 @@ export const MainScreen = () => {
                   onValueChange={handleSliderChange}
                   onSlidingComplete={() => {
                     if (parsedPrice > 0) {
+                      setIsCostRevealed(true);
                       playKaching();
                       showInterstitialAdMaybe();
                     }
@@ -448,7 +459,7 @@ export const MainScreen = () => {
 
       {/* Animation de Confettis */}
       {showConfetti && (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View key={confettiKey} style={StyleSheet.absoluteFill} pointerEvents="none">
           <ConfettiCannon 
             count={200} 
             origin={{ x: -10, y: 0 }} 
