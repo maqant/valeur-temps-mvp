@@ -87,13 +87,15 @@ export const MainScreen = () => {
     return { timeCost: totalTime, costPerUse: perUseCost, timePerUse: timeForOneUse };
   }, [price, uses, settings]);
 
-  // Animation & Heartbeat Sound Effect
   useEffect(() => {
     let hbPlayer = null;
     let volumeInterval = null;
 
-    const manageHeartbeat = async () => {
-      if (price && parseFloat(price) > 0) {
+    const manageHeartbeatAndKaching = async () => {
+      const currentParsedPrice = parseFloat(price);
+      const isShowingResults = currentParsedPrice > 0;
+
+      if (isShowingResults) {
         // Trigger Pop Animation
         scaleAnim.setValue(0.95);
         Animated.spring(scaleAnim, {
@@ -103,7 +105,23 @@ export const MainScreen = () => {
           useNativeDriver: true,
         }).start();
 
-        // If it costs more than 1 day of work, start heartbeat
+        // 1. Jouer le Ka-ching uniquement quand les résultats APPARAISSENT
+        // On vérifie si c'est la première fois que le prix est tapé (ex: passage de '' à '5')
+        if (!heartbeatSound && timeCost.days < 1) {
+           try {
+             const { sound } = await Audio.Sound.createAsync(
+               require('../../assets/sounds/kaching.mp3'),
+               { shouldPlay: true, volume: 0.8 }
+             );
+             sound.setOnPlaybackStatusUpdate((status) => {
+               if (status.didJustFinish) sound.unloadAsync();
+             });
+           } catch (e) {
+             console.log('Error kaching', e);
+           }
+        }
+
+        // 2. Cœur qui bat si ça dépasse 1 jour
         if (timeCost.days >= 1) {
           if (!heartbeatSound) {
             try {
@@ -128,7 +146,7 @@ export const MainScreen = () => {
             }
           }
         } else {
-          // Cost dropped below 1 day, stop heartbeat
+          // Redescend sous 1 jour
           if (heartbeatSound) {
             await heartbeatSound.stopAsync();
             await heartbeatSound.unloadAsync();
@@ -136,7 +154,7 @@ export const MainScreen = () => {
           }
         }
       } else {
-        // Price is empty, hide equivalents and stop sound
+        // Prix vide
         setShowEquivalents(false);
         if (heartbeatSound) {
           await heartbeatSound.stopAsync();
@@ -146,7 +164,7 @@ export const MainScreen = () => {
       }
     };
 
-    manageHeartbeat();
+    manageHeartbeatAndKaching();
 
     return () => {
       if (volumeInterval) clearInterval(volumeInterval);
@@ -172,18 +190,18 @@ export const MainScreen = () => {
       await heartbeatSound.stopAsync();
     }
     try {
+      // Clameur de la foule
       const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/sounds/kaching.mp3'),
-        { shouldPlay: true }
+        { uri: 'https://actions.google.com/sounds/v1/crowds/small_crowd_cheer_and_applause.ogg' },
+        { shouldPlay: true, volume: 1.0 }
       );
-      // Auto unload after playing
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.didJustFinish) {
           sound.unloadAsync();
         }
       });
     } catch (error) {
-      console.log('Error playing kaching', error);
+      console.log('Error playing cheer', error);
     }
 
     setTimeout(() => {
@@ -191,7 +209,7 @@ export const MainScreen = () => {
       setPrice('');
       setUses('');
       setShowEquivalents(false);
-    }, 3500);
+    }, 4500); // Laisse les confettis voler un peu plus longtemps
   };
 
   const formatTimeResult = (time) => {
@@ -360,7 +378,13 @@ export const MainScreen = () => {
       {/* Animation de Confettis */}
       {showConfetti && (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <ConfettiCannon count={100} origin={{ x: -10, y: 0 }} fallSpeed={2500} fadeOut />
+          <ConfettiCannon 
+            count={400} 
+            origin={{ x: -10, y: 0 }} 
+            fallSpeed={2500} 
+            explosionSpeed={500}
+            fadeOut 
+          />
         </View>
       )}
 
@@ -382,6 +406,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.m,
     flexGrow: 1,
+    paddingBottom: 80, // Ajout de marge pour éviter que ça coupe sur Android avec la barre de navigation
   },
   header: {
     flexDirection: 'row',
