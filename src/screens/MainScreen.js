@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated, BackHandler } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated, BackHandler } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
-import { Audio } from 'expo-av';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { colors, spacing, borderRadius } from '../theme/theme';
 import { SettingsModal } from '../components/SettingsModal';
@@ -24,7 +25,14 @@ export const MainScreen = () => {
   const [showEquivalents, setShowEquivalents] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [heartbeatSound, setHeartbeatSound] = useState(null);
+
+  // Audio Players
+  const kachingPlayer = useAudioPlayer(require('../../assets/sounds/kaching.mp3'));
+  const cheerPlayer = useAudioPlayer(require('../../assets/sounds/cheer.mp3'));
+  const heartbeatPlayer = useAudioPlayer(require('../../assets/sounds/heartbeat.mp3'));
+
+  // Ref pour le volume
+  const volumeIntervalRef = useRef(null);
 
   // Focus refs
   const priceInputRef = useRef(null);
@@ -39,11 +47,10 @@ export const MainScreen = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          allowsRecordingIOS: false,
-          staysActiveInBackground: false,
-          shouldDuckAndroid: true,
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          interruptionMode: 'mixWithOthers',
+          shouldPlayInBackground: false,
         });
       } catch (e) {
         console.log('Audio init error', e);
@@ -61,14 +68,12 @@ export const MainScreen = () => {
     initializeApp();
   }, [setLang]);
 
-  // Clean up sounds on unmount
+  // Clean up volume interval
   useEffect(() => {
     return () => {
-      if (heartbeatSound) {
-        heartbeatSound.unloadAsync();
-      }
+      if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
     };
-  }, [heartbeatSound]);
+  }, []);
 
   useEffect(() => {
     if (isReady && !settingsModalVisible) {
@@ -111,10 +116,7 @@ export const MainScreen = () => {
 
   // Animation & Heartbeat Sound Effect
   useEffect(() => {
-    let hbPlayer = null;
-    let volumeInterval = null;
-
-    const manageHeartbeat = async () => {
+    const manageHeartbeat = () => {
       const currentParsedPrice = parseFloat(price);
       const isShowingResults = currentParsedPrice > 0;
 
@@ -128,69 +130,47 @@ export const MainScreen = () => {
           useNativeDriver: true,
         }).start();
 
-        // 2. Cœur qui bat si ça dépasse 1 jour
+        // Cœur qui bat si ça dépasse 1 jour
         if (timeCost.days >= 1) {
-          if (!heartbeatSound) {
-            try {
-              const { sound } = await Audio.Sound.createAsync(
-                require('../../assets/sounds/heartbeat.mp3'),
-                { shouldPlay: true, isLooping: true, volume: 0.4 } // Volume de base plus fort
-              );
-              hbPlayer = sound;
-              setHeartbeatSound(sound);
+          if (!heartbeatPlayer.playing) {
+            heartbeatPlayer.loop = true;
+            heartbeatPlayer.volume = 0.4;
+            heartbeatPlayer.play();
 
-              let vol = 0.4;
-              volumeInterval = setInterval(() => {
-                vol += 0.05;
-                if (vol >= 1) {
-                  vol = 1;
-                  clearInterval(volumeInterval);
-                }
-                sound.setVolumeAsync(vol);
-              }, 1000);
-            } catch (error) {
-              console.log('Error loading heartbeat', error);
-            }
+            let vol = 0.4;
+            if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
+            volumeIntervalRef.current = setInterval(() => {
+              vol += 0.05;
+              if (vol >= 1) {
+                vol = 1;
+                clearInterval(volumeIntervalRef.current);
+              }
+              heartbeatPlayer.volume = vol;
+            }, 1000);
           }
         } else {
           // Redescend sous 1 jour
-          if (heartbeatSound) {
-            await heartbeatSound.stopAsync();
-            await heartbeatSound.unloadAsync();
-            setHeartbeatSound(null);
+          if (heartbeatPlayer.playing) {
+            heartbeatPlayer.pause();
           }
+          if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
         }
       } else {
         // Prix vide ou mode "sauvé"
         setShowEquivalents(false);
-        if (heartbeatSound) {
-          await heartbeatSound.stopAsync();
-          await heartbeatSound.unloadAsync();
-          setHeartbeatSound(null);
+        if (heartbeatPlayer.playing) {
+          heartbeatPlayer.pause();
         }
+        if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
       }
     };
 
     manageHeartbeat();
+  }, [timeCost, price, isSaved, heartbeatPlayer, scaleAnim]);
 
-    return () => {
-      if (volumeInterval) clearInterval(volumeInterval);
-      if (hbPlayer) hbPlayer.unloadAsync();
-    };
-  }, [timeCost, price, isSaved]);
-
-  const playKaching = async () => {
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/sounds/kaching.mp3'),
-        { shouldPlay: true, volume: 0.8 }
-      );
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) sound.unloadAsync();
-      });
-    } catch (e) {
-      console.log('Error kaching', e);
-    }
+  const playKaching = () => {
+    kachingPlayer.volume = 0.8;
+    kachingPlayer.play();
   };
 
   const handleSliderChange = (value) => {
@@ -205,7 +185,7 @@ export const MainScreen = () => {
     setUses(rounded.toString());
   };
 
-  const handleCancelBuy = async () => {
+  const handleCancelBuy = () => {
     setIsSaved(true);
     
     // Décalage des confettis pour éviter le lag graphique pendant le changement de Vue
@@ -213,24 +193,16 @@ export const MainScreen = () => {
       setShowConfetti(true);
     }, 150);
 
-    if (heartbeatSound) {
-      await heartbeatSound.stopAsync();
+    if (heartbeatPlayer.playing) {
+      heartbeatPlayer.pause();
+    }
+    if (volumeIntervalRef.current) {
+      clearInterval(volumeIntervalRef.current);
     }
 
-    try {
-      // Clameur de la foule (téléchargé en local)
-      const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/sounds/cheer.mp3'),
-        { shouldPlay: true, volume: 1.0 }
-      );
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          sound.unloadAsync();
-        }
-      });
-    } catch (error) {
-      console.log('Error playing cheer', error);
-    }
+    // Clameur de la foule
+    cheerPlayer.volume = 1.0;
+    cheerPlayer.play();
   };
 
   const formatTimeResult = (time) => {

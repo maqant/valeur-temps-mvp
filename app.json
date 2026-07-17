@@ -2,7 +2,7 @@
   "expo": {
     "name": "myapp",
     "slug": "myapp",
-    "version": "1.9.2",
+    "version": "1.9.3",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -19,6 +19,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-audio"
+    ]
   }
 }
