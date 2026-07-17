@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
@@ -23,6 +23,7 @@ export const MainScreen = () => {
   // New fun states
   const [showEquivalents, setShowEquivalents] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [heartbeatSound, setHeartbeatSound] = useState(null);
 
   // Focus ref pour passer au champ suivant
@@ -87,15 +88,16 @@ export const MainScreen = () => {
     return { timeCost: totalTime, costPerUse: perUseCost, timePerUse: timeForOneUse };
   }, [price, uses, settings]);
 
+  // Animation & Heartbeat Sound Effect
   useEffect(() => {
     let hbPlayer = null;
     let volumeInterval = null;
 
-    const manageHeartbeatAndKaching = async () => {
+    const manageHeartbeat = async () => {
       const currentParsedPrice = parseFloat(price);
       const isShowingResults = currentParsedPrice > 0;
 
-      if (isShowingResults) {
+      if (isShowingResults && !isSaved) {
         // Trigger Pop Animation
         scaleAnim.setValue(0.95);
         Animated.spring(scaleAnim, {
@@ -105,28 +107,12 @@ export const MainScreen = () => {
           useNativeDriver: true,
         }).start();
 
-        // 1. Jouer le Ka-ching uniquement quand les résultats APPARAISSENT
-        // On vérifie si c'est la première fois que le prix est tapé (ex: passage de '' à '5')
-        if (!heartbeatSound && timeCost.days < 1) {
-           try {
-             const { sound } = await Audio.Sound.createAsync(
-               require('../../assets/sounds/kaching.mp3'),
-               { shouldPlay: true, volume: 0.8 }
-             );
-             sound.setOnPlaybackStatusUpdate((status) => {
-               if (status.didJustFinish) sound.unloadAsync();
-             });
-           } catch (e) {
-             console.log('Error kaching', e);
-           }
-        }
-
         // 2. Cœur qui bat si ça dépasse 1 jour
         if (timeCost.days >= 1) {
           if (!heartbeatSound) {
             try {
               const { sound } = await Audio.Sound.createAsync(
-                { uri: 'https://actions.google.com/sounds/v1/human_voices/heartbeat.ogg' },
+                require('../../assets/sounds/heartbeat.mp3'),
                 { shouldPlay: true, isLooping: true, volume: 0.1 }
               );
               hbPlayer = sound;
@@ -154,7 +140,7 @@ export const MainScreen = () => {
           }
         }
       } else {
-        // Prix vide
+        // Prix vide ou mode "sauvé"
         setShowEquivalents(false);
         if (heartbeatSound) {
           await heartbeatSound.stopAsync();
@@ -164,13 +150,27 @@ export const MainScreen = () => {
       }
     };
 
-    manageHeartbeatAndKaching();
+    manageHeartbeat();
 
     return () => {
       if (volumeInterval) clearInterval(volumeInterval);
       if (hbPlayer) hbPlayer.unloadAsync();
     };
-  }, [timeCost, price]);
+  }, [timeCost, price, isSaved]);
+
+  const playKaching = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/sounds/kaching.mp3'),
+        { shouldPlay: true, volume: 0.8 }
+      );
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) sound.unloadAsync();
+      });
+    } catch (e) {
+      console.log('Error kaching', e);
+    }
+  };
 
   const handleSliderChange = (value) => {
     const rounded = Math.round(value);
@@ -186,13 +186,16 @@ export const MainScreen = () => {
 
   const handleCancelBuy = async () => {
     setShowConfetti(true);
+    setIsSaved(true);
+    
     if (heartbeatSound) {
       await heartbeatSound.stopAsync();
     }
+
     try {
-      // Clameur de la foule
+      // Clameur de la foule (téléchargé en local)
       const { sound } = await Audio.Sound.createAsync(
-        { uri: 'https://actions.google.com/sounds/v1/crowds/small_crowd_cheer_and_applause.ogg' },
+        require('../../assets/sounds/cheer.mp3'),
         { shouldPlay: true, volume: 1.0 }
       );
       sound.setOnPlaybackStatusUpdate((status) => {
@@ -203,13 +206,6 @@ export const MainScreen = () => {
     } catch (error) {
       console.log('Error playing cheer', error);
     }
-
-    setTimeout(() => {
-      setShowConfetti(false);
-      setPrice('');
-      setUses('');
-      setShowEquivalents(false);
-    }, 4500); // Laisse les confettis voler un peu plus longtemps
   };
 
   const formatTimeResult = (time) => {
@@ -245,131 +241,166 @@ export const MainScreen = () => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.inputSection}>
-            <Text style={styles.label}>{t('priceLabel')} ({currencySym})</Text>
-            <TextInput
-              style={styles.priceInput}
-              keyboardType="decimal-pad"
-              value={price}
-              onChangeText={setPrice}
-              placeholder={t('pricePlaceholder')}
-              placeholderTextColor={colors.textSecondary}
-              maxLength={10}
-              returnKeyType="next"
-              onSubmitEditing={() => usesInputRef.current?.focus()}
-              blurOnSubmit={false}
-            />
-          </View>
+          {isSaved ? (
+            <View style={styles.savedStateContainer}>
+              <Text style={styles.savedStateTitle}>Bravo ! 🎉</Text>
+              <Text style={styles.savedStateText}>Tu as été fort. Ton banquier est fier de toi.</Text>
+              
+              <TouchableOpacity 
+                style={styles.quitButton} 
+                onPress={() => BackHandler.exitApp()}
+              >
+                <Text style={styles.quitButtonText}>Quitter l'appli et revenir à la raison 🚪</Text>
+              </TouchableOpacity>
 
-          <View style={styles.inputSection}>
-            <Text style={styles.label}>{t('usesLabel')}</Text>
-            <View style={styles.usesInputContainer}>
-              <TextInput
-                ref={usesInputRef}
-                style={styles.usesInput}
-                keyboardType="numeric"
-                value={uses}
-                placeholder="1"
-                placeholderTextColor={colors.secondary}
-                onChangeText={(val) => {
-                  const cleaned = val.replace(/[^0-9]/g, '');
-                  setUses(cleaned);
+              <TouchableOpacity 
+                style={styles.resetButton} 
+                onPress={() => {
+                  setIsSaved(false);
+                  setShowConfetti(false);
+                  setPrice('');
+                  setUses('');
+                  setShowEquivalents(false);
                 }}
-                returnKeyType="done"
-                onSubmitEditing={() => Keyboard.dismiss()}
-              />
-            </View>
-            <Slider
-              style={styles.slider}
-              minimumValue={1}
-              maximumValue={1000}
-              step={1}
-              value={parseInt(uses) || 1}
-              onValueChange={handleSliderChange}
-              minimumTrackTintColor={colors.secondary}
-              maximumTrackTintColor={colors.surface}
-              thumbTintColor={colors.secondary}
-            />
-          </View>
-
-          {parsedPrice > 0 ? (
-            <View style={styles.resultsContainer}>
-              <Animated.View style={[styles.resultCard, { transform: [{ scale: scaleAnim }] }]}>
-                <Text style={styles.resultLabel}>{t('resultMainLabel')}</Text>
-                <Text style={styles.resultValuePrimary}>{formatTimeResult(timeCost)}</Text>
-                <Text style={styles.resultSubtext}>{t('resultMainSubtext')}</Text>
-              </Animated.View>
-
-              <View style={styles.row}>
-                <View style={[styles.resultCard, styles.halfCard]}>
-                  <Text style={styles.resultLabel}>{t('resultCostPerUse')}</Text>
-                  <Text style={styles.resultValueSecondary}>{costPerUse.toFixed(2)} {currencySym}</Text>
-                </View>
-                <View style={[styles.resultCard, styles.halfCard]}>
-                  <Text style={styles.resultLabel}>{t('resultTimePerUse')}</Text>
-                  <Text style={styles.resultValueSecondary}>{formatTimeResult(timePerUse)}</Text>
-                </View>
-              </View>
-
-              {/* Nouvelles actions Fun */}
-              <View style={styles.actionsContainer}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancelBuy}>
-                  <Text style={styles.cancelButtonText}>{t('cancelBtn')}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.equivalentsToggle} 
-                  onPress={() => setShowEquivalents(!showEquivalents)}
-                >
-                  <Text style={styles.equivalentsToggleText}>
-                    {t('buyInsteadBtn')} {showEquivalents ? '▲' : '▼'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Affichage conditionnel des Equivalents */}
-              {showEquivalents && (
-                <View style={styles.equivalentsContainer}>
-                  <Text style={styles.equivalentsTitle}>{t('equivalentsTitle')}</Text>
-                  
-                  <View style={styles.equivalentRow}>
-                    <Text style={styles.equivalentIcon}>🍔</Text>
-                    <View style={styles.equivalentInfo}>
-                      <Text style={styles.equivalentName}>{t('eqBigMac')}</Text>
-                      <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 4.80)}</Text>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.equivalentRow}>
-                    <Text style={styles.equivalentIcon}>🍿</Text>
-                    <View style={styles.equivalentInfo}>
-                      <Text style={styles.equivalentName}>{t('eqCinema')}</Text>
-                      <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 12)}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.equivalentRow}>
-                    <Text style={styles.equivalentIcon}>📺</Text>
-                    <View style={styles.equivalentInfo}>
-                      <Text style={styles.equivalentName}>{t('eqNetflix')}</Text>
-                      <Text style={styles.equivalentValue}>{(parsedPrice / 8.99).toFixed(1)}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.equivalentRow}>
-                    <Text style={styles.equivalentIcon}>📈</Text>
-                    <View style={styles.equivalentInfo}>
-                      <Text style={styles.equivalentName}>{t('eqSP500')}</Text>
-                      <Text style={styles.equivalentValue}>~{(parsedPrice * 10.83).toFixed(2)} {currencySym}</Text>
-                    </View>
-                  </View>
-                </View>
-              )}
+              >
+                <Text style={styles.resetButtonText}>Refaire un calcul</Text>
+              </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyStateText}>{t('emptyState')}</Text>
-            </View>
+            <>
+              <View style={styles.inputSection}>
+                <Text style={styles.label}>{t('priceLabel')} ({currencySym})</Text>
+                <TextInput
+                  style={styles.priceInput}
+                  keyboardType="decimal-pad"
+                  value={price}
+                  onChangeText={setPrice}
+                  placeholder={t('pricePlaceholder')}
+                  placeholderTextColor={colors.textSecondary}
+                  maxLength={10}
+                  returnKeyType="next"
+                  onSubmitEditing={() => usesInputRef.current?.focus()}
+                  blurOnSubmit={false}
+                />
+              </View>
+
+              <View style={styles.inputSection}>
+                <Text style={styles.label}>{t('usesLabel')}</Text>
+                <View style={styles.usesInputContainer}>
+                  <TextInput
+                    ref={usesInputRef}
+                    style={styles.usesInput}
+                    keyboardType="numeric"
+                    value={uses}
+                    placeholder="1"
+                    placeholderTextColor={colors.secondary}
+                    onChangeText={(val) => {
+                      const cleaned = val.replace(/[^0-9]/g, '');
+                      setUses(cleaned);
+                    }}
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                      Keyboard.dismiss();
+                      if (parsedPrice > 0) playKaching();
+                    }}
+                  />
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={1}
+                  maximumValue={1000}
+                  step={1}
+                  value={parseInt(uses) || 1}
+                  onValueChange={handleSliderChange}
+                  onSlidingComplete={() => {
+                    if (parsedPrice > 0) playKaching();
+                  }}
+                  minimumTrackTintColor={colors.secondary}
+                  maximumTrackTintColor={colors.surface}
+                  thumbTintColor={colors.secondary}
+                />
+              </View>
+
+              {parsedPrice > 0 ? (
+                <View style={styles.resultsContainer}>
+                  <Animated.View style={[styles.resultCard, { transform: [{ scale: scaleAnim }] }]}>
+                    <Text style={styles.resultLabel}>{t('resultMainLabel')}</Text>
+                    <Text style={styles.resultValuePrimary}>{formatTimeResult(timeCost)}</Text>
+                    <Text style={styles.resultSubtext}>{t('resultMainSubtext')}</Text>
+                  </Animated.View>
+
+                  <View style={styles.row}>
+                    <View style={[styles.resultCard, styles.halfCard]}>
+                      <Text style={styles.resultLabel}>{t('resultCostPerUse')}</Text>
+                      <Text style={styles.resultValueSecondary}>{costPerUse.toFixed(2)} {currencySym}</Text>
+                    </View>
+                    <View style={[styles.resultCard, styles.halfCard]}>
+                      <Text style={styles.resultLabel}>{t('resultTimePerUse')}</Text>
+                      <Text style={styles.resultValueSecondary}>{formatTimeResult(timePerUse)}</Text>
+                    </View>
+                  </View>
+
+                  {/* Nouvelles actions Fun */}
+                  <View style={styles.actionsContainer}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancelBuy}>
+                      <Text style={styles.cancelButtonText}>{t('cancelBtn')}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={styles.equivalentsToggle} 
+                      onPress={() => setShowEquivalents(!showEquivalents)}
+                    >
+                      <Text style={styles.equivalentsToggleText}>
+                        {t('buyInsteadBtn')} {showEquivalents ? '▲' : '▼'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Affichage conditionnel des Equivalents */}
+                  {showEquivalents && (
+                    <View style={styles.equivalentsContainer}>
+                      <Text style={styles.equivalentsTitle}>{t('equivalentsTitle')}</Text>
+                      
+                      <View style={styles.equivalentRow}>
+                        <Text style={styles.equivalentIcon}>🍔</Text>
+                        <View style={styles.equivalentInfo}>
+                          <Text style={styles.equivalentName}>{t('eqBigMac')}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 4.80)}</Text>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.equivalentRow}>
+                        <Text style={styles.equivalentIcon}>🍿</Text>
+                        <View style={styles.equivalentInfo}>
+                          <Text style={styles.equivalentName}>{t('eqCinema')}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 12)}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.equivalentRow}>
+                        <Text style={styles.equivalentIcon}>📺</Text>
+                        <View style={styles.equivalentInfo}>
+                          <Text style={styles.equivalentName}>{t('eqNetflix')}</Text>
+                          <Text style={styles.equivalentValue}>{(parsedPrice / 8.99).toFixed(1)}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.equivalentRow}>
+                        <Text style={styles.equivalentIcon}>📈</Text>
+                        <View style={styles.equivalentInfo}>
+                          <Text style={styles.equivalentName}>{t('eqSP500')}</Text>
+                          <Text style={styles.equivalentValue}>~{(parsedPrice * 10.83).toFixed(2)} {currencySym}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View style={styles.emptyStateContainer}>
+                  <Text style={styles.emptyStateText}>{t('emptyState')}</Text>
+                </View>
+              )}
+            </>
           )}
         </ScrollView>
       </TouchableWithoutFeedback>
@@ -379,10 +410,10 @@ export const MainScreen = () => {
       {showConfetti && (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <ConfettiCannon 
-            count={400} 
+            count={1000} 
             origin={{ x: -10, y: 0 }} 
-            fallSpeed={2500} 
-            explosionSpeed={500}
+            fallSpeed={1500} 
+            explosionSpeed={200}
             fadeOut 
           />
         </View>
@@ -406,7 +437,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.m,
     flexGrow: 1,
-    paddingBottom: 80, // Ajout de marge pour éviter que ça coupe sur Android avec la barre de navigation
+    paddingBottom: 80,
   },
   header: {
     flexDirection: 'row',
@@ -582,5 +613,45 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
     lineHeight: 24,
+  },
+  savedStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing.xxl,
+  },
+  savedStateTitle: {
+    color: colors.primary,
+    fontSize: 40,
+    fontWeight: 'bold',
+    marginBottom: spacing.l,
+  },
+  savedStateText: {
+    color: colors.text,
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: spacing.xxl,
+    lineHeight: 28,
+  },
+  quitButton: {
+    backgroundColor: '#FF3366',
+    padding: spacing.l,
+    borderRadius: borderRadius.l,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: spacing.l,
+  },
+  quitButtonText: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  resetButton: {
+    padding: spacing.m,
+  },
+  resetButtonText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
