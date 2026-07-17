@@ -7,11 +7,15 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const { t, lang, setLang } = useLanguage();
   const [salary, setSalary] = useState('');
   const [hours, setHours] = useState('');
+  const [currency, setCurrency] = useState('\u20ac');
 
   useEffect(() => {
     if (initialData) {
       setSalary(initialData.salary ? initialData.salary.toString() : '');
       setHours(initialData.hours ? initialData.hours.toString() : '');
+      if (initialData.currency) {
+        setCurrency(initialData.currency);
+      }
       if (initialData.lang && initialData.lang !== lang) {
         setLang(initialData.lang);
       }
@@ -27,7 +31,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
       return;
     }
 
-    onSave({ salary: parsedSalary, hours: parsedHours, lang });
+    onSave({ salary: parsedSalary, hours: parsedHours, lang, currency });
   };
 
   return (
@@ -63,8 +67,26 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
               </View>
             </View>
 
+            {/* Sélecteur de devise */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('salaryLabel')}</Text>
+              <Text style={styles.label}>{t('currencyLabel')}</Text>
+              <View style={styles.langRow}>
+                {['\u20ac', '$'].map((sym) => (
+                  <TouchableOpacity
+                    key={sym}
+                    style={[styles.langButton, currency === sym && styles.langButtonActive]}
+                    onPress={() => setCurrency(sym)}
+                  >
+                    <Text style={[styles.langButtonText, currency === sym && styles.langButtonTextActive]}>
+                      {sym}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{t('salaryLabel')} ({currency})</Text>
               <TextInput
                 style={styles.input}
                 keyboardType="numeric"

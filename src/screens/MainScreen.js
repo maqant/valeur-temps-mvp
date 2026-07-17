@@ -114,7 +114,7 @@ export const MainScreen = () => {
           </View>
 
           <View style={styles.inputSection}>
-            <Text style={styles.label}>{t('priceLabel')}</Text>
+            <Text style={styles.label}>{t('priceLabel')} ({settings?.currency || '\u20ac'})</Text>
             <TextInput
               style={styles.priceInput}
               keyboardType="decimal-pad"
@@ -164,7 +164,7 @@ export const MainScreen = () => {
               <View style={styles.row}>
                 <View style={[styles.resultCard, styles.halfCard]}>
                   <Text style={styles.resultLabel}>{t('resultCostPerUse')}</Text>
-                  <Text style={styles.resultValueSecondary}>{costPerUse.toFixed(2)} €</Text>
+                  <Text style={styles.resultValueSecondary}>{costPerUse.toFixed(2)} {settings?.currency || '\u20ac'}</Text>
                 </View>
                 <View style={[styles.resultCard, styles.halfCard]}>
                   <Text style={styles.resultLabel}>{t('resultTimePerUse')}</Text>

@@ -9,7 +9,8 @@ export const translations = {
     // SettingsModal
     settingsTitle: 'Combien vaut ta sueur ?',
     settingsSubtitle: 'Dis-nous combien tu gagnes, promis on ne juge pas.',
-    salaryLabel: 'Salaire net mensuel (€)',
+    currencyLabel: 'Devise',
+    salaryLabel: 'Salaire net mensuel',
     salaryPlaceholder: 'Ex : 2500',
     hoursLabel: 'Heures de taf par semaine',
     hoursPlaceholder: 'Ex : 35',
@@ -26,7 +27,7 @@ export const translations = {
     resultMainLabel: 'Ce petit plaisir va te coûter :',
     resultMainSubtext: 'de ta vie au boulot',
     resultCostPerUse: 'Prix par utilisation',
-    resultTimePerUse: 'Temps pour 1 utilisation',
+    resultTimePerUse: 'Temps de travail / utilisation',
 
     // MainScreen — empty state
     emptyState: 'Entre un prix pour voir combien de temps tu vas devoir transpirer.',
@@ -45,7 +46,8 @@ export const translations = {
     // SettingsModal
     settingsTitle: 'What\'s your sweat worth?',
     settingsSubtitle: 'Tell us what you earn, we promise we won\'t judge.',
-    salaryLabel: 'Monthly net salary (€)',
+    currencyLabel: 'Currency',
+    salaryLabel: 'Monthly net salary',
     salaryPlaceholder: 'E.g. 2500',
     hoursLabel: 'Work hours per week',
     hoursPlaceholder: 'E.g. 35',
@@ -62,7 +64,7 @@ export const translations = {
     resultMainLabel: 'This little treat will cost you:',
     resultMainSubtext: 'of your life at work',
     resultCostPerUse: 'Real cost per use',
-    resultTimePerUse: 'Time per use',
+    resultTimePerUse: 'Time at work per use',
 
     // MainScreen — empty state
     emptyState: 'Enter a price to see how long you\'ll have to sweat for it.',
