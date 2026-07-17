@@ -18,15 +18,15 @@ export const translations = {
     languageLabel: 'Langue / Language',
 
     // MainScreen — inputs
-    priceLabel: 'Prix du caprice ?',
+    priceLabel: 'Ça coûte combien ?',
     pricePlaceholder: '0.00',
     usesLabel: 'Tu vas vraiment t\'en servir combien de fois ?',
 
     // MainScreen — results
     resultMainLabel: 'Ce petit plaisir va te coûter :',
     resultMainSubtext: 'de ta vie au boulot',
-    resultCostPerUse: 'Prix réel par fois',
-    resultTimePerUse: 'Temps par fois',
+    resultCostPerUse: 'Prix par utilisation',
+    resultTimePerUse: 'Temps pour 1 utilisation',
 
     // MainScreen — empty state
     emptyState: 'Entre un prix pour voir combien de temps tu vas devoir transpirer.',
