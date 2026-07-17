@@ -4,32 +4,32 @@
 export const translations = {
   fr: {
     // App
-    appTitle: 'Le Prix du Temps',
+    appTitle: 'SweatCost',
 
     // SettingsModal
-    settingsTitle: 'Vos Paramètres de Vie',
-    settingsSubtitle: 'Pour calculer le prix en temps, nous avons besoin de connaître la valeur de votre temps.',
-    salaryLabel: 'Salaire net mensuel (EUR)',
+    settingsTitle: 'Combien vaut ta sueur ?',
+    settingsSubtitle: 'Dis-nous combien tu gagnes, promis on ne juge pas.',
+    salaryLabel: 'Salaire net mensuel (€)',
     salaryPlaceholder: 'Ex : 2500',
-    hoursLabel: 'Heures de travail par semaine',
+    hoursLabel: 'Heures de taf par semaine',
     hoursPlaceholder: 'Ex : 35',
-    saveButton: 'Enregistrer et Commencer',
-    validationError: 'Veuillez entrer des valeurs valides superieures a zero.',
+    saveButton: 'C\'est parti !',
+    validationError: 'Veuillez entrer des valeurs valides supérieures à zéro.',
     languageLabel: 'Langue / Language',
 
-    // MainScreen - inputs
-    priceLabel: "Combien coute cet achat ?",
+    // MainScreen — inputs
+    priceLabel: 'Prix du caprice ?',
     pricePlaceholder: '0.00',
-    usesLabel: "Combien de fois allez-vous l'utiliser ?",
+    usesLabel: 'Tu vas vraiment t\'en servir combien de fois ?',
 
-    // MainScreen - results
-    resultMainLabel: 'Cet achat va vous couter :',
-    resultMainSubtext: 'de votre vie au travail',
-    resultCostPerUse: 'Prix par utilisation',
-    resultTimePerUse: 'Temps par utilisation',
+    // MainScreen — results
+    resultMainLabel: 'Ce petit plaisir va te coûter :',
+    resultMainSubtext: 'de ta vie au boulot',
+    resultCostPerUse: 'Prix réel par fois',
+    resultTimePerUse: 'Temps par fois',
 
-    // MainScreen - empty state
-    emptyState: 'Entrez un prix pour voir son cout reel en temps de vie.',
+    // MainScreen — empty state
+    emptyState: 'Entre un prix pour voir combien de temps tu vas devoir transpirer.',
 
     // Time units
     day: 'jour',
@@ -40,32 +40,32 @@ export const translations = {
 
   en: {
     // App
-    appTitle: 'Your Time Cost',
+    appTitle: 'SweatCost',
 
     // SettingsModal
-    settingsTitle: 'Your Life Settings',
-    settingsSubtitle: 'To calculate the time cost, we need to know the value of your time.',
-    salaryLabel: 'Monthly net salary (EUR)',
+    settingsTitle: 'What\'s your sweat worth?',
+    settingsSubtitle: 'Tell us what you earn, we promise we won\'t judge.',
+    salaryLabel: 'Monthly net salary (€)',
     salaryPlaceholder: 'E.g. 2500',
-    hoursLabel: 'Working hours per week',
+    hoursLabel: 'Work hours per week',
     hoursPlaceholder: 'E.g. 35',
-    saveButton: 'Save & Get Started',
+    saveButton: 'Let\'s go!',
     validationError: 'Please enter valid values greater than zero.',
     languageLabel: 'Langue / Language',
 
-    // MainScreen - inputs
-    priceLabel: 'How much does it cost?',
+    // MainScreen — inputs
+    priceLabel: 'Price of this whim?',
     pricePlaceholder: '0.00',
-    usesLabel: 'How many times will you use it?',
+    usesLabel: 'How many times will you actually use it?',
 
-    // MainScreen - results
-    resultMainLabel: 'This purchase will cost you:',
-    resultMainSubtext: 'of your working life',
-    resultCostPerUse: 'Price per use',
+    // MainScreen — results
+    resultMainLabel: 'This little treat will cost you:',
+    resultMainSubtext: 'of your life at work',
+    resultCostPerUse: 'Real cost per use',
     resultTimePerUse: 'Time per use',
 
-    // MainScreen - empty state
-    emptyState: 'Enter a price to see its real cost in life time.',
+    // MainScreen — empty state
+    emptyState: 'Enter a price to see how long you\'ll have to sweat for it.',
 
     // Time units
     day: 'day',
