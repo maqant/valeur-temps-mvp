@@ -16,7 +16,7 @@ export const MainScreen = () => {
   const [isReady, setIsReady] = useState(false);
 
   const [price, setPrice] = useState('');
-  const [uses, setUses] = useState('1');
+  const [uses, setUses] = useState('');
 
   // Focus ref pour passer au champ suivant
   const usesInputRef = useRef(null);
@@ -157,6 +157,8 @@ export const MainScreen = () => {
                 style={styles.usesInput}
                 keyboardType="numeric"
                 value={uses}
+                placeholder="1"
+                placeholderTextColor={colors.secondary}
                 onChangeText={(val) => {
                   // Accepter uniquement des chiffres, permettre le champ vide pendant la frappe
                   const cleaned = val.replace(/[^0-9]/g, '');
