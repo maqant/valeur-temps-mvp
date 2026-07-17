@@ -134,9 +134,9 @@ export const MainScreen = () => {
                 keyboardType="numeric"
                 value={uses}
                 onChangeText={(val) => {
-                  // Accepter uniquement des chiffres, fallback à '1' si vide
+                  // Accepter uniquement des chiffres, permettre le champ vide pendant la frappe
                   const cleaned = val.replace(/[^0-9]/g, '');
-                  setUses(cleaned || '1');
+                  setUses(cleaned);
                 }}
               />
             </View>

@@ -1,14 +1,14 @@
-﻿// Dictionnaire de traductions FR / EN
+// Dictionnaire de traductions FR / EN
 // Ajoutez de nouvelles langues en dupliquant un bloc et en changeant la cle.
 
 export const translations = {
   fr: {
     // App
-    appTitle: 'Your Life Cost',
+    appTitle: 'Le Prix du Temps',
 
     // SettingsModal
-    settingsTitle: 'Vos Parametres de Vie',
-    settingsSubtitle: 'Pour calculer le cout reel, nous avons besoin de connaitre la valeur de votre temps.',
+    settingsTitle: 'Vos Paramètres de Vie',
+    settingsSubtitle: 'Pour calculer le prix en temps, nous avons besoin de connaître la valeur de votre temps.',
     salaryLabel: 'Salaire net mensuel (EUR)',
     salaryPlaceholder: 'Ex : 2500',
     hoursLabel: 'Heures de travail par semaine',
@@ -40,11 +40,11 @@ export const translations = {
 
   en: {
     // App
-    appTitle: 'Your Life Cost',
+    appTitle: 'Your Time Cost',
 
     // SettingsModal
     settingsTitle: 'Your Life Settings',
-    settingsSubtitle: 'To calculate the real cost, we need to know the value of your time.',
+    settingsSubtitle: 'To calculate the time cost, we need to know the value of your time.',
     salaryLabel: 'Monthly net salary (EUR)',
     salaryPlaceholder: 'E.g. 2500',
     hoursLabel: 'Working hours per week',
