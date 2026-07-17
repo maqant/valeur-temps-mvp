@@ -37,6 +37,17 @@ export const MainScreen = () => {
 
   useEffect(() => {
     const initializeApp = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          allowsRecordingIOS: false,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+      } catch (e) {
+        console.log('Audio init error', e);
+      }
+
       const savedSettings = await loadSettings();
       if (savedSettings) {
         setSettings(savedSettings);
@@ -113,12 +124,12 @@ export const MainScreen = () => {
             try {
               const { sound } = await Audio.Sound.createAsync(
                 require('../../assets/sounds/heartbeat.mp3'),
-                { shouldPlay: true, isLooping: true, volume: 0.1 }
+                { shouldPlay: true, isLooping: true, volume: 0.4 } // Volume de base plus fort
               );
               hbPlayer = sound;
               setHeartbeatSound(sound);
 
-              let vol = 0.1;
+              let vol = 0.4;
               volumeInterval = setInterval(() => {
                 vol += 0.05;
                 if (vol >= 1) {
@@ -185,9 +196,13 @@ export const MainScreen = () => {
   };
 
   const handleCancelBuy = async () => {
-    setShowConfetti(true);
     setIsSaved(true);
     
+    // Décalage des confettis pour éviter le lag graphique pendant le changement de Vue
+    setTimeout(() => {
+      setShowConfetti(true);
+    }, 150);
+
     if (heartbeatSound) {
       await heartbeatSound.stopAsync();
     }
@@ -410,10 +425,9 @@ export const MainScreen = () => {
       {showConfetti && (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <ConfettiCannon 
-            count={1000} 
+            count={200} 
             origin={{ x: -10, y: 0 }} 
-            fallSpeed={1500} 
-            explosionSpeed={200}
+            fallSpeed={3000} 
             fadeOut 
           />
         </View>
