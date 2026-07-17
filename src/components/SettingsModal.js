@@ -3,9 +3,11 @@ import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvo
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme/theme';
 import { useLanguage } from '../i18n/LanguageContext';
+import { usePremium } from '../context/PremiumContext';
 
 export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const { t, lang, setLang } = useLanguage();
+  const { isAdFree, purchasePremium } = usePremium();
   const [salary, setSalary] = useState('');
   const [hours, setHours] = useState('');
   const [currency, setCurrency] = useState('\u20ac');
@@ -34,6 +36,14 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onSave({ salary: parsedSalary, hours: parsedHours, lang, currency });
+  };
+
+  const handlePurchase = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const success = await purchasePremium();
+    if (success) {
+      Alert.alert('Premium', t('removeAdsSuccess'));
+    }
   };
 
   return (
@@ -110,6 +120,15 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                 placeholderTextColor={colors.textSecondary}
               />
             </View>
+
+            {!isAdFree && (
+              <View style={styles.premiumContainer}>
+                <Text style={styles.premiumTitle}>{t('premiumTitle')}</Text>
+                <TouchableOpacity style={styles.premiumButton} onPress={handlePurchase}>
+                  <Text style={styles.premiumButtonText}>{t('removeAdsBtn')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <TouchableOpacity 
               style={styles.howItWorksLink} 
@@ -235,5 +254,32 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  premiumContainer: {
+    marginTop: spacing.s,
+    marginBottom: spacing.l,
+    alignItems: 'center',
+    padding: spacing.s,
+    borderWidth: 1,
+    borderColor: '#F1C40F',
+    borderRadius: borderRadius.m,
+    backgroundColor: 'rgba(241, 196, 15, 0.05)',
+  },
+  premiumTitle: {
+    color: '#F1C40F',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: spacing.s,
+  },
+  premiumButton: {
+    backgroundColor: '#F1C40F',
+    paddingVertical: spacing.s,
+    paddingHorizontal: spacing.l,
+    borderRadius: borderRadius.m,
+  },
+  premiumButtonText: {
+    color: '#121212',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });

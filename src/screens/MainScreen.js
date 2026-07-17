@@ -11,12 +11,20 @@ import { SettingsModal } from '../components/SettingsModal';
 import { loadSettings, saveSettings } from '../utils/storage';
 import { calculateHourlyRate, calculateWorkDayHours, convertCostToTime } from '../utils/calculations';
 import { useLanguage } from '../i18n/LanguageContext';
+import { InterstitialAd, AdEventType, TestIds, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import { usePremium } from '../context/PremiumContext';
+
+const interstitial = InterstitialAd.createForAdRequest(TestIds.INTERSTITIAL, {
+  requestNonPersonalizedAdsOnly: true,
+});
 
 export const MainScreen = () => {
   const { t, setLang } = useLanguage();
+  const { isAdFree } = usePremium();
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [settings, setSettings] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const [interstitialLoaded, setInterstitialLoaded] = useState(false);
 
   const [price, setPrice] = useState('');
   const [uses, setUses] = useState('');
@@ -43,6 +51,34 @@ export const MainScreen = () => {
 
   // Valeur d'animation pour les résultats
   const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isAdFree) return;
+    
+    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+      setInterstitialLoaded(true);
+    });
+
+    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+      setInterstitialLoaded(false);
+      interstitial.load();
+    });
+
+    interstitial.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeClosed();
+    };
+  }, [isAdFree]);
+
+  const showInterstitialAdMaybe = () => {
+    if (isAdFree || !interstitialLoaded) return;
+    if (Math.random() < 0.3) {
+      interstitial.show();
+      setInterstitialLoaded(false);
+    }
+  };
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -299,7 +335,10 @@ export const MainScreen = () => {
                     returnKeyType="done"
                     onSubmitEditing={() => {
                       Keyboard.dismiss();
-                      if (parsedPrice > 0) playKaching();
+                      if (parsedPrice > 0) {
+                        playKaching();
+                        showInterstitialAdMaybe();
+                      }
                     }}
                   />
                 </View>
@@ -311,7 +350,10 @@ export const MainScreen = () => {
                   value={parseInt(uses) || 1}
                   onValueChange={handleSliderChange}
                   onSlidingComplete={() => {
-                    if (parsedPrice > 0) playKaching();
+                    if (parsedPrice > 0) {
+                      playKaching();
+                      showInterstitialAdMaybe();
+                    }
                   }}
                   minimumTrackTintColor={colors.secondary}
                   maximumTrackTintColor={colors.surface}
@@ -422,6 +464,18 @@ export const MainScreen = () => {
         onClose={() => setSettingsModalVisible(false)}
         initialData={settings}
       />
+
+      {!isAdFree && (
+        <View style={styles.bannerContainer}>
+          <BannerAd
+            unitId={TestIds.BANNER}
+            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+            requestOptions={{
+              requestNonPersonalizedAdsOnly: true,
+            }}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -597,6 +651,12 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  bannerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: spacing.xs,
   },
   emptyStateContainer: {
     flex: 1,
