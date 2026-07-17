@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { colors, spacing, borderRadius } from '../theme/theme';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
+  const { t, lang, setLang } = useLanguage();
   const [salary, setSalary] = useState('');
   const [hours, setHours] = useState('');
 
@@ -10,6 +12,9 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
     if (initialData) {
       setSalary(initialData.salary ? initialData.salary.toString() : '');
       setHours(initialData.hours ? initialData.hours.toString() : '');
+      if (initialData.lang && initialData.lang !== lang) {
+        setLang(initialData.lang);
+      }
     }
   }, [initialData]);
 
@@ -18,11 +23,11 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
     const parsedHours = parseFloat(hours);
 
     if (isNaN(parsedSalary) || isNaN(parsedHours) || parsedSalary <= 0 || parsedHours <= 0) {
-      alert("Veuillez entrer des valeurs valides supérieures à zéro.");
+      alert(t('validationError'));
       return;
     }
 
-    onSave({ salary: parsedSalary, hours: parsedHours });
+    onSave({ salary: parsedSalary, hours: parsedHours, lang });
   };
 
   return (
@@ -38,35 +43,52 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
             )}
-            <Text style={styles.title}>Configuration</Text>
-            <Text style={styles.subtitle}>Pour calculer le coût réel, nous avons besoin de connaître la valeur de votre temps.</Text>
+            <Text style={styles.title}>{t('settingsTitle')}</Text>
+            <Text style={styles.subtitle}>{t('settingsSubtitle')}</Text>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Salaire net mensuel (€)</Text>
+              <Text style={styles.label}>{t('languageLabel')}</Text>
+              <View style={styles.langRow}>
+                {['fr', 'en'].map((code) => (
+                  <TouchableOpacity
+                    key={code}
+                    style={[styles.langButton, lang === code && styles.langButtonActive]}
+                    onPress={() => setLang(code)}
+                  >
+                    <Text style={[styles.langButtonText, lang === code && styles.langButtonTextActive]}>
+                      {code.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{t('salaryLabel')}</Text>
               <TextInput
                 style={styles.input}
                 keyboardType="numeric"
                 value={salary}
                 onChangeText={setSalary}
-                placeholder="Ex: 2500"
+                placeholder={t('salaryPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Heures de travail par semaine</Text>
+              <Text style={styles.label}>{t('hoursLabel')}</Text>
               <TextInput
                 style={styles.input}
                 keyboardType="numeric"
                 value={hours}
                 onChangeText={setHours}
-                placeholder="Ex: 35"
+                placeholder={t('hoursPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
               />
             </View>
 
             <TouchableOpacity style={styles.button} onPress={handleSave}>
-              <Text style={styles.buttonText}>Enregistrer et Commencer</Text>
+              <Text style={styles.buttonText}>{t('saveButton')}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -136,6 +158,31 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.m,
     padding: spacing.m,
     fontSize: 16,
+  },
+  langRow: {
+    flexDirection: 'row',
+    gap: spacing.s,
+  },
+  langButton: {
+    flex: 1,
+    paddingVertical: spacing.s,
+    borderRadius: borderRadius.m,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  langButtonActive: {
+    backgroundColor: colors.secondary,
+  },
+  langButtonText: {
+    color: colors.secondary,
+    fontWeight: 'bold',
+    fontSize: 15,
+    letterSpacing: 1,
+  },
+  langButtonTextActive: {
+    color: colors.background,
   },
   button: {
     backgroundColor: colors.primary,

@@ -6,8 +6,10 @@ import { colors, spacing, borderRadius } from '../theme/theme';
 import { SettingsModal } from '../components/SettingsModal';
 import { loadSettings, saveSettings } from '../utils/storage';
 import { calculateHourlyRate, calculateWorkDayHours, convertCostToTime } from '../utils/calculations';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export const MainScreen = () => {
+  const { t, setLang } = useLanguage();
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [settings, setSettings] = useState(null);
   const [isReady, setIsReady] = useState(false);
@@ -23,17 +25,23 @@ export const MainScreen = () => {
       const savedSettings = await loadSettings();
       if (savedSettings) {
         setSettings(savedSettings);
+        if (savedSettings.lang) {
+          setLang(savedSettings.lang);
+        }
       } else {
         setSettingsModalVisible(true);
       }
       setIsReady(true);
     };
     initializeApp();
-  }, []);
+  }, [setLang]);
 
   const handleSaveSettings = async (newSettings) => {
     await saveSettings(newSettings);
     setSettings(newSettings);
+    if (newSettings.lang) {
+      setLang(newSettings.lang);
+    }
     setSettingsModalVisible(false);
   };
 
@@ -77,11 +85,11 @@ export const MainScreen = () => {
 
   const formatTimeResult = (time) => {
     let result = [];
-    if (time.days > 0) result.push(`${time.days} jour${time.days > 1 ? 's' : ''}`);
-    if (time.hours > 0) result.push(`${time.hours} h`);
-    if (time.minutes > 0) result.push(`${time.minutes} min`);
+    if (time.days > 0) result.push(`${time.days} ${time.days > 1 ? t('days') : t('day')}`);
+    if (time.hours > 0) result.push(`${time.hours} ${t('hour')}`);
+    if (time.minutes > 0) result.push(`${time.minutes} ${t('minute')}`);
 
-    if (result.length === 0) return '0 min';
+    if (result.length === 0) return `0 ${t('minute')}`;
     return result.join(' ');
   };
 
@@ -99,27 +107,27 @@ export const MainScreen = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.appTitle}>Your Life Cost</Text>
+            <Text style={styles.appTitle}>{t('appTitle')}</Text>
             <TouchableOpacity onPress={() => setSettingsModalVisible(true)} style={styles.settingsIcon}>
               <Text style={styles.settingsIconText}>⚙️</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Prix de l'objet (€)</Text>
+            <Text style={styles.label}>{t('priceLabel')}</Text>
             <TextInput
               style={styles.priceInput}
               keyboardType="decimal-pad"
               value={price}
               onChangeText={setPrice}
-              placeholder="0.00"
+              placeholder={t('pricePlaceholder')}
               placeholderTextColor={colors.textSecondary}
               maxLength={10}
             />
           </View>
 
           <View style={styles.inputSection}>
-            <Text style={styles.label}>Nombre d'utilisations estimées</Text>
+            <Text style={styles.label}>{t('usesLabel')}</Text>
             <View style={styles.usesInputContainer}>
               <TextInput
                 style={styles.usesInput}
@@ -148,25 +156,25 @@ export const MainScreen = () => {
           {price ? (
             <View style={styles.resultsContainer}>
               <View style={styles.resultCard}>
-                <Text style={styles.resultLabel}>Coût Total en Temps</Text>
+                <Text style={styles.resultLabel}>{t('resultMainLabel')}</Text>
                 <Text style={styles.resultValuePrimary}>{formatTimeResult(timeCost)}</Text>
-                <Text style={styles.resultSubtext}>de travail</Text>
+                <Text style={styles.resultSubtext}>{t('resultMainSubtext')}</Text>
               </View>
 
               <View style={styles.row}>
                 <View style={[styles.resultCard, styles.halfCard]}>
-                  <Text style={styles.resultLabel}>Coût / Utilisation</Text>
+                  <Text style={styles.resultLabel}>{t('resultCostPerUse')}</Text>
                   <Text style={styles.resultValueSecondary}>{costPerUse.toFixed(2)} €</Text>
                 </View>
                 <View style={[styles.resultCard, styles.halfCard]}>
-                  <Text style={styles.resultLabel}>Temps / Utilisation</Text>
+                  <Text style={styles.resultLabel}>{t('resultTimePerUse')}</Text>
                   <Text style={styles.resultValueSecondary}>{formatTimeResult(timePerUse)}</Text>
                 </View>
               </View>
             </View>
           ) : (
             <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyStateText}>Entrez un prix pour voir son coût réel en temps de vie.</Text>
+              <Text style={styles.emptyStateText}>{t('emptyState')}</Text>
             </View>
           )}
         </ScrollView>
