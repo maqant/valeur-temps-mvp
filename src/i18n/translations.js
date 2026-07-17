@@ -35,6 +35,15 @@ export const translations = {
     // MainScreen — empty state
     emptyState: 'Entre un prix pour voir combien de temps tu vas devoir transpirer.',
 
+    // Equivalents & Actions
+    cancelBtn: 'J\'abandonne l\'achat 💸',
+    buyInsteadBtn: 'Que puis-je acheter à la place ? 🤔',
+    equivalentsTitle: 'Si tu n\'achètes pas ça, tu pourrais te payer :',
+    eqBigMac: 'Menus Big Mac',
+    eqKebab: 'Kebabs complets',
+    eqNetflix: 'Mois de Netflix (Standard)',
+    eqSP500: 'Dans le S&P500 (après 25 ans)',
+
     // Time units
     day: 'jour',
     days: 'jours',
@@ -74,6 +83,15 @@ export const translations = {
 
     // MainScreen — empty state
     emptyState: 'Enter a price to see how long you\'ll have to sweat for it.',
+
+    // Equivalents & Actions
+    cancelBtn: 'I\'m not buying it 💸',
+    buyInsteadBtn: 'What else could I buy? 🤔',
+    equivalentsTitle: 'If you don\'t buy this, you could afford:',
+    eqBigMac: 'Big Mac meals',
+    eqKebab: 'Full Kebabs',
+    eqNetflix: 'Months of Netflix',
+    eqSP500: 'Invested in S&P500 (after 25 yrs)',
 
     // Time units
     day: 'day',
