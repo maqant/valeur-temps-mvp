@@ -26,7 +26,8 @@ export const MainScreen = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [heartbeatSound, setHeartbeatSound] = useState(null);
 
-  // Focus ref pour passer au champ suivant
+  // Focus refs
+  const priceInputRef = useRef(null);
   const usesInputRef = useRef(null);
 
   // Ref pour throttler les haptics du slider
@@ -68,6 +69,15 @@ export const MainScreen = () => {
       }
     };
   }, [heartbeatSound]);
+
+  useEffect(() => {
+    if (isReady && !settingsModalVisible) {
+      const timer = setTimeout(() => {
+        priceInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isReady, settingsModalVisible]);
 
   const handleSaveSettings = async (newSettings) => {
     await saveSettings(newSettings);
@@ -265,7 +275,7 @@ export const MainScreen = () => {
                 style={styles.quitButton} 
                 onPress={() => BackHandler.exitApp()}
               >
-                <Text style={styles.quitButtonText}>Quitter l'appli et revenir à la raison 🚪</Text>
+                <Text style={styles.quitButtonText}>Quitter l'appli et revenir à la raison</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -286,6 +296,7 @@ export const MainScreen = () => {
               <View style={styles.inputSection}>
                 <Text style={styles.label}>{t('priceLabel')} ({currencySym})</Text>
                 <TextInput
+                  ref={priceInputRef}
                   style={styles.priceInput}
                   keyboardType="decimal-pad"
                   value={price}
