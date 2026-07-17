@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme/theme';
@@ -22,6 +23,9 @@ export const MainScreen = () => {
 
   // Ref pour throttler les haptics du slider (100ms minimum entre chaque vibration)
   const lastHapticRef = useRef(0);
+
+  // Valeur d'animation pour les résultats
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -72,6 +76,19 @@ export const MainScreen = () => {
     return { timeCost: totalTime, costPerUse: perUseCost, timePerUse: timeForOneUse };
   }, [price, uses, settings]);
 
+  // Animation légère "Pop" à chaque fois que les résultats changent
+  useEffect(() => {
+    if (price && parseFloat(price) > 0) {
+      scaleAnim.setValue(0.95);
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        tension: 100,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [timeCost]);
+
   const handleSliderChange = (value) => {
     const rounded = Math.round(value);
     // Éviter les re-renders inutiles si la valeur n'a pas changé
@@ -112,7 +129,7 @@ export const MainScreen = () => {
           <View style={styles.header}>
             <Text style={styles.appTitle}>{t('appTitle')}</Text>
             <TouchableOpacity onPress={() => setSettingsModalVisible(true)} style={styles.settingsIcon}>
-              <Text style={styles.settingsIconText}>⚙️</Text>
+              <Ionicons name="settings-sharp" size={28} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -164,11 +181,11 @@ export const MainScreen = () => {
 
           {price ? (
             <View style={styles.resultsContainer}>
-              <View style={styles.resultCard}>
+              <Animated.View style={[styles.resultCard, { transform: [{ scale: scaleAnim }] }]}>
                 <Text style={styles.resultLabel}>{t('resultMainLabel')}</Text>
                 <Text style={styles.resultValuePrimary}>{formatTimeResult(timeCost)}</Text>
                 <Text style={styles.resultSubtext}>{t('resultMainSubtext')}</Text>
-              </View>
+              </Animated.View>
 
               <View style={styles.row}>
                 <View style={[styles.resultCard, styles.halfCard]}>

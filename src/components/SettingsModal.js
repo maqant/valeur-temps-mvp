@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme/theme';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -31,6 +32,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
       return;
     }
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onSave({ salary: parsedSalary, hours: parsedHours, lang, currency });
   };
 
