@@ -17,6 +17,9 @@ export const MainScreen = () => {
   const [price, setPrice] = useState('');
   const [uses, setUses] = useState('1');
 
+  // Focus ref pour passer au champ suivant
+  const usesInputRef = useRef(null);
+
   // Ref pour throttler les haptics du slider (100ms minimum entre chaque vibration)
   const lastHapticRef = useRef(0);
 
@@ -123,6 +126,9 @@ export const MainScreen = () => {
               placeholder={t('pricePlaceholder')}
               placeholderTextColor={colors.textSecondary}
               maxLength={10}
+              returnKeyType="next"
+              onSubmitEditing={() => usesInputRef.current?.focus()}
+              blurOnSubmit={false}
             />
           </View>
 
@@ -130,6 +136,7 @@ export const MainScreen = () => {
             <Text style={styles.label}>{t('usesLabel')}</Text>
             <View style={styles.usesInputContainer}>
               <TextInput
+                ref={usesInputRef}
                 style={styles.usesInput}
                 keyboardType="numeric"
                 value={uses}
@@ -138,6 +145,8 @@ export const MainScreen = () => {
                   const cleaned = val.replace(/[^0-9]/g, '');
                   setUses(cleaned);
                 }}
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
               />
             </View>
             <Slider
