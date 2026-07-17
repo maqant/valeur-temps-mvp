@@ -17,6 +17,9 @@ export const translations = {
     saveButton: 'C\'est parti !',
     validationError: 'Veuillez entrer des valeurs valides supérieures à zéro.',
     languageLabel: 'Langue / Language',
+    howItWorksBtn: 'Comprendre le calcul 🧮',
+    howItWorksTitle: 'Le secret du calcul',
+    howItWorksText: 'Pour être précis, on divise votre salaire par vos heures mensuelles. On trouve vos heures mensuelles en multipliant vos heures hebdos par 4,33 (la moyenne des semaines dans un mois : 52 semaines / 12 mois).',
 
     // MainScreen — inputs
     priceLabel: 'Ça coûte combien ?',
@@ -54,6 +57,9 @@ export const translations = {
     saveButton: 'Let\'s go!',
     validationError: 'Please enter valid values greater than zero.',
     languageLabel: 'Langue / Language',
+    howItWorksBtn: 'How is this calculated? 🧮',
+    howItWorksTitle: 'The math behind the magic',
+    howItWorksText: 'To be hyper-accurate, we divide your salary by your monthly hours. We find your monthly hours by multiplying your weekly hours by 4.33 (the average weeks in a month: 52 weeks / 12 months).',
 
     // MainScreen — inputs
     priceLabel: 'Price of this whim?',

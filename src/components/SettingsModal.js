@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
 import { colors, spacing, borderRadius } from '../theme/theme';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -109,6 +109,13 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
               />
             </View>
 
+            <TouchableOpacity 
+              style={styles.howItWorksLink} 
+              onPress={() => Alert.alert(t('howItWorksTitle'), t('howItWorksText'))}
+            >
+              <Text style={styles.howItWorksText}>{t('howItWorksBtn')}</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.button} onPress={handleSave}>
               <Text style={styles.buttonText}>{t('saveButton')}</Text>
             </TouchableOpacity>
@@ -205,6 +212,15 @@ const styles = StyleSheet.create({
   },
   langButtonTextActive: {
     color: colors.background,
+  },
+  howItWorksLink: {
+    alignItems: 'center',
+    marginBottom: spacing.m,
+  },
+  howItWorksText: {
+    color: colors.secondary,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
   button: {
     backgroundColor: colors.primary,
