@@ -2,7 +2,7 @@
   "expo": {
     "name": "myapp",
     "slug": "myapp",
-    "version": "1.10.1",
+    "version": "1.10.3",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -43,7 +43,7 @@
         "expo-build-properties",
         {
           "android": {
-            "kotlinVersion": "2.1.20"
+            "kotlinVersion": "2.3.0"
           }
         }
       ]
