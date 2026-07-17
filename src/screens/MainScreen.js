@@ -318,15 +318,15 @@ export const MainScreen = () => {
                     <Text style={styles.equivalentIcon}>🍔</Text>
                     <View style={styles.equivalentInfo}>
                       <Text style={styles.equivalentName}>{t('eqBigMac')}</Text>
-                      <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 5)}</Text>
+                      <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 4.80)}</Text>
                     </View>
                   </View>
                   
                   <View style={styles.equivalentRow}>
-                    <Text style={styles.equivalentIcon}>🥙</Text>
+                    <Text style={styles.equivalentIcon}>🍿</Text>
                     <View style={styles.equivalentInfo}>
-                      <Text style={styles.equivalentName}>{t('eqKebab')}</Text>
-                      <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 8)}</Text>
+                      <Text style={styles.equivalentName}>{t('eqCinema')}</Text>
+                      <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 12)}</Text>
                     </View>
                   </View>
 
@@ -334,7 +334,7 @@ export const MainScreen = () => {
                     <Text style={styles.equivalentIcon}>📺</Text>
                     <View style={styles.equivalentInfo}>
                       <Text style={styles.equivalentName}>{t('eqNetflix')}</Text>
-                      <Text style={styles.equivalentValue}>{(parsedPrice / 13.49).toFixed(1)}</Text>
+                      <Text style={styles.equivalentValue}>{(parsedPrice / 8.99).toFixed(1)}</Text>
                     </View>
                   </View>
 
@@ -342,7 +342,7 @@ export const MainScreen = () => {
                     <Text style={styles.equivalentIcon}>📈</Text>
                     <View style={styles.equivalentInfo}>
                       <Text style={styles.equivalentName}>{t('eqSP500')}</Text>
-                      <Text style={styles.equivalentValue}>~{(parsedPrice * 5.42).toFixed(2)} {currencySym}</Text>
+                      <Text style={styles.equivalentValue}>~{(parsedPrice * 10.83).toFixed(2)} {currencySym}</Text>
                     </View>
                   </View>
                 </View>
