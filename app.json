@@ -2,11 +2,16 @@
   "expo": {
     "name": "myapp",
     "slug": "myapp",
-    "version": "1.9.3",
+    "version": "1.9.4",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#121212"
+    },
     "ios": {
       "supportsTablet": true
     },
