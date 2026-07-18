@@ -22,7 +22,8 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
 
   useEffect(() => {
     if (initialData) {
-      setSalary(initialData.salary ? initialData.salary.toString() : '');
+      const initialSalary = initialData.salary;
+      setSalary((initialSalary && initialSalary !== 0 && initialSalary !== '0') ? initialSalary.toString() : '');
       setTaxRate(initialData.taxRate || 0);
       setHours(initialData.hours ? initialData.hours.toString() : '');
       if (initialData.currency) {
@@ -138,7 +139,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                   placeholder={tLocal('salaryPlaceholder')}
                   placeholderTextColor={colors.textSecondary}
                 />
-                <Text style={styles.currencySuffix}>{currency}</Text>
+                <Text style={[styles.currencySuffix, { color: (!salary || salary === '') ? colors.textSecondary : colors.text }]}>{currency}</Text>
               </View>
             </View>
 
