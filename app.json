@@ -2,7 +2,7 @@
   "expo": {
     "name": "SweatCost",
     "slug": "sweatcost",
-    "version": "1.14.3",
+    "version": "1.14.4",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -48,11 +48,6 @@
         }
       ],
       "expo-asset"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "fdb6af61-7010-418f-afcb-9973ad68e80e"
-      }
-    }
+    ]
   }
 }

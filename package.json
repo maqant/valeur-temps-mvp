@@ -1,6 +1,6 @@
 {
   "name": "sweatcost",
-  "version": "1.14.3",
+  "version": "1.14.4",
   "main": "index.js",
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
