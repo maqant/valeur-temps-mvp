@@ -361,7 +361,7 @@ export const MainScreen = () => {
                     keyboardType="numeric"
                     value={uses}
                     placeholder="1"
-                    placeholderTextColor={colors.secondary}
+                    placeholderTextColor={colors.textSecondary}
                     onChangeText={(val) => {
                       const cleaned = val.replace(/[^0-9]/g, '');
                       setUses(cleaned);
