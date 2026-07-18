@@ -9,7 +9,7 @@ import { usePremium } from '../context/PremiumContext';
 
 export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const { lang: globalLang } = useLanguage();
-  const { isAdFree, showPaywall, showCustomerCenter } = usePremium();
+  const { isAdFree, showPaywall, showCustomerCenter, premiumPrice } = usePremium();
   const [salary, setSalary] = useState('');
   const [taxRate, setTaxRate] = useState(0);
   const [isEditingTax, setIsEditingTax] = useState(false);
@@ -218,7 +218,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
               <View style={styles.premiumContainer}>
                 <Text style={styles.premiumTitle}>{tLocal('premiumTitle')}</Text>
                 <TouchableOpacity style={styles.premiumButton} onPress={handlePurchase}>
-                  <Text style={styles.premiumButtonText}>{tLocal('removeAdsBtn')}</Text>
+                  <Text style={styles.premiumButtonText}>{tLocal('removeAdsBtn')} ({premiumPrice})</Text>
                 </TouchableOpacity>
               </View>
             ) : (

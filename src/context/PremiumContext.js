@@ -7,6 +7,7 @@ const PremiumContext = createContext();
 
 export const PremiumProvider = ({ children }) => {
   const [isAdFree, setIsAdFree] = useState(false);
+  const [premiumPrice, setPremiumPrice] = useState('1.99 €');
 
   useEffect(() => {
     const initPurchases = async () => {
@@ -24,6 +25,19 @@ export const PremiumProvider = ({ children }) => {
         // Initial check
         const customerInfo = await Purchases.getCustomerInfo();
         checkProEntitlement(customerInfo);
+
+        // Fetch offerings to get priceString
+        try {
+          const offerings = await Purchases.getOfferings();
+          if (offerings.current && offerings.current.availablePackages.length > 0) {
+            const pkg = offerings.current.availablePackages[0];
+            if (pkg && pkg.product && pkg.product.priceString) {
+              setPremiumPrice(pkg.product.priceString);
+            }
+          }
+        } catch (e) {
+          console.warn("Could not fetch offerings for price:", e);
+        }
 
         // Best Practice: Add a listener for customer info updates (purchases, expiration, etc.)
         Purchases.addCustomerInfoUpdateListener((info) => {
@@ -92,6 +106,7 @@ export const PremiumProvider = ({ children }) => {
   return (
     <PremiumContext.Provider value={{ 
       isAdFree, 
+      premiumPrice,
       showPaywall, 
       showCustomerCenter, 
       restorePurchases 
