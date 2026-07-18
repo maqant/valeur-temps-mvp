@@ -18,6 +18,21 @@ const interstitial = InterstitialAd.createForAdRequest(TestIds.INTERSTITIAL, {
   requestNonPersonalizedAdsOnly: true,
 });
 
+const CustomFastFade = {
+  duration: 150,
+  create: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+  update: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+  },
+  delete: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+};
+
 export const MainScreen = () => {
   const { t, setLang } = useLanguage();
   const { isAdFree } = usePremium();
@@ -297,7 +312,7 @@ export const MainScreen = () => {
               <TouchableOpacity 
                 style={styles.resetButton} 
                 onPress={() => {
-                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                  LayoutAnimation.configureNext(CustomFastFade);
                   setIsSaved(false);
                   setShowConfetti(false);
                   setPrice('');
@@ -352,7 +367,7 @@ export const MainScreen = () => {
                     onSubmitEditing={() => {
                       Keyboard.dismiss();
                       if (parsedPrice > 0) {
-                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                        LayoutAnimation.configureNext(CustomFastFade);
                         setIsCostRevealed(true);
                         playKaching();
                         showInterstitialAdMaybe();
@@ -370,7 +385,7 @@ export const MainScreen = () => {
                   onSlidingComplete={() => {
                     Keyboard.dismiss();
                     if (parsedPrice > 0) {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                      LayoutAnimation.configureNext(CustomFastFade);
                       setIsCostRevealed(true);
                       playKaching();
                       showInterstitialAdMaybe();
@@ -404,7 +419,7 @@ export const MainScreen = () => {
                   <TouchableOpacity
                     style={styles.detailsToggle}
                     onPress={() => {
-                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                      LayoutAnimation.configureNext(CustomFastFade);
                       setShowDetails(!showDetails);
                     }}
                   >

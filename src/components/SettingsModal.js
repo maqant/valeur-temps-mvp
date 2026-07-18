@@ -71,7 +71,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={() => { if (initialData && onClose) onClose(); }}>
+    <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={() => { if (initialData && onClose) onClose(); }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
