@@ -327,26 +327,29 @@ export const MainScreen = () => {
           ) : (
             <>
               <View style={styles.inputSection}>
-                <Text style={styles.label}>{t('priceLabel')} ({currencySym})</Text>
-                <TextInput
-                  ref={priceInputRef}
-                  style={styles.priceInput}
-                  keyboardType="decimal-pad"
-                  value={price}
-                  onChangeText={(val) => {
-                    setPrice(val);
-                    setIsSaved(false);
-                    setShowConfetti(false);
-                    setIsCostRevealed(false);
-                    setShowDetails(false);
-                  }}
-                  placeholder={t('pricePlaceholder')}
-                  placeholderTextColor={colors.textSecondary}
-                  maxLength={10}
-                  returnKeyType="next"
-                  onSubmitEditing={() => usesInputRef.current?.focus()}
-                  blurOnSubmit={false}
-                />
+                <Text style={styles.label}>{t('priceLabel')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                  <TextInput
+                    ref={priceInputRef}
+                    style={styles.priceInput}
+                    keyboardType="decimal-pad"
+                    value={price}
+                    onChangeText={(val) => {
+                      setPrice(val);
+                      setIsSaved(false);
+                      setShowConfetti(false);
+                      setIsCostRevealed(false);
+                      setShowDetails(false);
+                    }}
+                    placeholder={t('pricePlaceholder')}
+                    placeholderTextColor={colors.textSecondary}
+                    maxLength={10}
+                    returnKeyType="next"
+                    onSubmitEditing={() => usesInputRef.current?.focus()}
+                    blurOnSubmit={false}
+                  />
+                  <Text style={{ fontSize: 32, color: colors.textSecondary, fontWeight: 'bold' }}>{currencySym}</Text>
+                </View>
               </View>
 
               <View style={styles.inputSection}>

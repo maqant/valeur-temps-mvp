@@ -128,15 +128,18 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{tLocal('salaryLabel')} ({currency})</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={salary}
-                onChangeText={setSalary}
-                placeholder={tLocal('salaryPlaceholder')}
-                placeholderTextColor={colors.textSecondary}
-              />
+              <Text style={styles.label}>{tLocal('salaryLabel')}</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.inputNoBorder}
+                  keyboardType="numeric"
+                  value={salary}
+                  onChangeText={setSalary}
+                  placeholder={tLocal('salaryPlaceholder')}
+                  placeholderTextColor={colors.textSecondary}
+                />
+                <Text style={styles.currencySuffix}>{currency}</Text>
+              </View>
             </View>
 
             <View style={styles.inputContainer}>
@@ -311,6 +314,26 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.m,
     padding: spacing.m,
     fontSize: 16,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+    borderRadius: borderRadius.m,
+    paddingHorizontal: spacing.m,
+  },
+  inputNoBorder: {
+    flex: 1,
+    color: colors.text,
+    paddingVertical: spacing.m,
+    fontSize: 16,
+  },
+  currencySuffix: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginLeft: 8,
   },
   taxHeader: {
     flexDirection: 'row',
