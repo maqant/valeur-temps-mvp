@@ -4,16 +4,20 @@ import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme/theme';
 import Slider from '@react-native-community/slider';
 import { useLanguage } from '../i18n/LanguageContext';
+import { translations } from '../i18n/translations';
 import { usePremium } from '../context/PremiumContext';
 
 export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
-  const { t, lang, setLang } = useLanguage();
+  const { lang: globalLang } = useLanguage();
   const { isAdFree, showPaywall, showCustomerCenter } = usePremium();
   const [salary, setSalary] = useState('');
   const [taxRate, setTaxRate] = useState(0);
   const [isEditingTax, setIsEditingTax] = useState(false);
   const [hours, setHours] = useState('');
   const [currency, setCurrency] = useState('\u20ac');
+  const [localLang, setLocalLang] = useState('fr');
+
+  const tLocal = (key) => translations[localLang]?.[key] || key;
 
   useEffect(() => {
     if (initialData) {
@@ -23,23 +27,27 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
       if (initialData.currency) {
         setCurrency(initialData.currency);
       }
-      if (initialData.lang && initialData.lang !== lang) {
-        setLang(initialData.lang);
+      if (initialData.lang) {
+        setLocalLang(initialData.lang);
+      } else {
+        setLocalLang(globalLang);
       }
+    } else {
+      setLocalLang(globalLang);
     }
-  }, [initialData]);
+  }, [initialData, globalLang]);
 
   const handleSave = () => {
     const parsedSalary = parseFloat(salary);
     const parsedHours = parseFloat(hours);
 
     if (isNaN(parsedSalary) || isNaN(parsedHours) || parsedSalary <= 0 || parsedHours <= 0) {
-      alert(t('validationError'));
+      alert(tLocal('validationError'));
       return;
     }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onSave({ salary: parsedSalary, hours: parsedHours, lang, currency, taxRate });
+    onSave({ salary: parsedSalary, hours: parsedHours, lang: localLang, currency, taxRate });
   };
 
   const getTaxEmoji = (rate) => {
@@ -74,19 +82,19 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
             )}
-            <Text style={styles.title}>{t('settingsTitle')}</Text>
-            <Text style={styles.subtitle}>{t('settingsSubtitle')}</Text>
+            <Text style={styles.title}>{tLocal('settingsTitle')}</Text>
+            <Text style={styles.subtitle}>{tLocal('settingsSubtitle')}</Text>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('languageLabel')}</Text>
+              <Text style={styles.label}>{tLocal('languageLabel')}</Text>
               <View style={styles.langRow}>
                 {['fr', 'en'].map((code) => (
                   <TouchableOpacity
                     key={code}
-                    style={[styles.langButton, lang === code && styles.langButtonActive]}
-                    onPress={() => setLang(code)}
+                    style={[styles.langButton, localLang === code && styles.langButtonActive]}
+                    onPress={() => setLocalLang(code)}
                   >
-                    <Text style={[styles.langButtonText, lang === code && styles.langButtonTextActive]}>
+                    <Text style={[styles.langButtonText, localLang === code && styles.langButtonTextActive]}>
                       {code.toUpperCase()}
                     </Text>
                   </TouchableOpacity>
@@ -96,7 +104,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
 
             {/* Sélecteur de devise */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('currencyLabel')}</Text>
+              <Text style={styles.label}>{tLocal('currencyLabel')}</Text>
               <View style={styles.langRow}>
                 {['\u20ac', '$'].map((sym) => (
                   <TouchableOpacity
@@ -113,19 +121,19 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('salaryLabel')} ({currency})</Text>
+              <Text style={styles.label}>{tLocal('salaryLabel')} ({currency})</Text>
               <TextInput
                 style={styles.input}
                 keyboardType="numeric"
                 value={salary}
                 onChangeText={setSalary}
-                placeholder={t('salaryPlaceholder')}
+                placeholder={tLocal('salaryPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('taxLabel') || 'Taxe de la vraie vie (Loyer, factures...)'}</Text>
+              <Text style={styles.label}>{tLocal('taxLabel') || 'Taxe de la vraie vie (Loyer, factures...)'}</Text>
               
               <View style={styles.taxHeader}>
                 <Text style={styles.taxValue}>{Math.round(taxRate)}%</Text>
@@ -172,42 +180,42 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('hoursLabel')}</Text>
+              <Text style={styles.label}>{tLocal('hoursLabel')}</Text>
               <TextInput
                 style={styles.input}
                 keyboardType="numeric"
                 value={hours}
                 onChangeText={setHours}
-                placeholder={t('hoursPlaceholder')}
+                placeholder={tLocal('hoursPlaceholder')}
                 placeholderTextColor={colors.textSecondary}
               />
             </View>
 
             {!isAdFree ? (
               <View style={styles.premiumContainer}>
-                <Text style={styles.premiumTitle}>{t('premiumTitle')}</Text>
+                <Text style={styles.premiumTitle}>{tLocal('premiumTitle')}</Text>
                 <TouchableOpacity style={styles.premiumButton} onPress={handlePurchase}>
-                  <Text style={styles.premiumButtonText}>{t('removeAdsBtn')}</Text>
+                  <Text style={styles.premiumButtonText}>{tLocal('removeAdsBtn')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.premiumContainer}>
-                <Text style={styles.premiumTitle}>{t('premiumActiveTitle') || 'SweatCost Pro Actif 💎'}</Text>
+                <Text style={styles.premiumTitle}>{tLocal('premiumActiveTitle') || 'SweatCost Pro Actif 💎'}</Text>
                 <TouchableOpacity style={styles.premiumButton} onPress={handleManageSubscription}>
-                  <Text style={styles.premiumButtonText}>{t('managePurchaseBtn') || 'Gérer mon achat'}</Text>
+                  <Text style={styles.premiumButtonText}>{tLocal('managePurchaseBtn') || 'Gérer mon achat'}</Text>
                 </TouchableOpacity>
               </View>
             )}
 
             <TouchableOpacity 
               style={styles.howItWorksLink} 
-              onPress={() => Alert.alert(t('howItWorksTitle'), t('howItWorksText'))}
+              onPress={() => Alert.alert(tLocal('howItWorksTitle'), tLocal('howItWorksText'))}
             >
-              <Text style={styles.howItWorksText}>{t('howItWorksBtn')}</Text>
+              <Text style={styles.howItWorksText}>{tLocal('howItWorksBtn')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.button} onPress={handleSave}>
-              <Text style={styles.buttonText}>{t('saveButton')}</Text>
+              <Text style={styles.buttonText}>{tLocal('saveButton')}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
