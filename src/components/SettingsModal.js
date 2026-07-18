@@ -13,7 +13,6 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const [salary, setSalary] = useState('');
   const [taxRate, setTaxRate] = useState(0);
   const [isEditingTax, setIsEditingTax] = useState(false);
-  const [sliderKey, setSliderKey] = useState(0);
   const [hours, setHours] = useState('');
   const [currency, setCurrency] = useState('\u20ac');
   const [localLang, setLocalLang] = useState('fr');
@@ -151,17 +150,17 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                       keyboardType="numeric"
                       autoFocus
                       onBlur={() => setIsEditingTax(false)}
-                      onSubmitEditing={(e) => {
-                        const val = parseFloat(e.nativeEvent.text.replace(',', '.'));
+                      onChangeText={(text) => {
+                        const val = parseFloat(text.replace(',', '.'));
                         if (!isNaN(val) && val >= 0) {
-                          let newRate = (val / parsedSalaryForUI) * 100;
+                          let newRate = Math.round((val / parsedSalaryForUI) * 100);
                           if (newRate > 90) newRate = 90;
                           setTaxRate(newRate);
-                          setSliderKey(k => k + 1);
+                        } else if (text === '') {
+                          setTaxRate(0);
                         }
-                        setIsEditingTax(false);
                       }}
-                      defaultValue={(parsedSalaryForUI * (taxRate / 100)).toFixed(0).toString()}
+                      value={(parsedSalaryForUI * (taxRate / 100)).toFixed(0).toString()}
                     />
                   ) : (
                     <TouchableOpacity onPress={() => setIsEditingTax(true)}>
@@ -175,7 +174,6 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
               </View>
 
               <Slider
-                key={`tax-slider-${sliderKey}`}
                 style={{ width: '100%', height: 40 }}
                 minimumValue={0}
                 maximumValue={90}
