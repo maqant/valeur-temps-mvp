@@ -348,7 +348,7 @@ export const MainScreen = () => {
                     onSubmitEditing={() => usesInputRef.current?.focus()}
                     blurOnSubmit={false}
                   />
-                  <Text style={{ fontSize: 32, color: colors.textSecondary, fontWeight: 'bold' }}>{currencySym}</Text>
+                  <Text style={{ fontSize: 48, color: colors.primary, fontWeight: 'bold', marginLeft: 4 }}>{currencySym}</Text>
                 </View>
               </View>
 

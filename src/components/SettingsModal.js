@@ -332,8 +332,8 @@ const styles = StyleSheet.create({
   },
   currencySuffix: {
     fontSize: 16,
-    color: colors.textSecondary,
-    marginLeft: 8,
+    color: colors.text,
+    marginLeft: 4,
   },
   taxHeader: {
     flexDirection: 'row',
