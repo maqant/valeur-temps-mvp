@@ -11,6 +11,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const { isAdFree, showPaywall, showCustomerCenter } = usePremium();
   const [salary, setSalary] = useState('');
   const [taxRate, setTaxRate] = useState(0);
+  const [isEditingTax, setIsEditingTax] = useState(false);
   const [hours, setHours] = useState('');
   const [currency, setCurrency] = useState('\u20ac');
 
@@ -127,11 +128,32 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
               <Text style={styles.label}>{t('taxLabel') || 'Taxe de la vraie vie (Loyer, factures...)'}</Text>
               
               <View style={styles.taxHeader}>
-                <Text style={styles.taxValue}>{taxRate}%</Text>
+                <Text style={styles.taxValue}>{Math.round(taxRate)}%</Text>
                 {parsedSalaryForUI > 0 && (
-                  <Text style={styles.taxDeduction}>
-                    - {(parsedSalaryForUI * (taxRate / 100)).toFixed(0)} {currency}
-                  </Text>
+                  isEditingTax ? (
+                    <TextInput
+                      style={styles.taxDeductionInput}
+                      keyboardType="numeric"
+                      autoFocus
+                      onBlur={() => setIsEditingTax(false)}
+                      onSubmitEditing={(e) => {
+                        const val = parseFloat(e.nativeEvent.text.replace(',', '.'));
+                        if (!isNaN(val) && val >= 0) {
+                          let newRate = (val / parsedSalaryForUI) * 100;
+                          if (newRate > 90) newRate = 90;
+                          setTaxRate(newRate);
+                        }
+                        setIsEditingTax(false);
+                      }}
+                      defaultValue={(parsedSalaryForUI * (taxRate / 100)).toFixed(0).toString()}
+                    />
+                  ) : (
+                    <TouchableOpacity onPress={() => setIsEditingTax(true)}>
+                      <Text style={styles.taxDeduction}>
+                        - {(parsedSalaryForUI * (taxRate / 100)).toFixed(0)} {currency}
+                      </Text>
+                    </TouchableOpacity>
+                  )
                 )}
                 <Text style={styles.taxEmoji}>{getTaxEmoji(taxRate)}</Text>
               </View>
@@ -144,7 +166,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                 value={taxRate}
                 onValueChange={setTaxRate}
                 minimumTrackTintColor={colors.secondary}
-                maximumTrackTintColor={colors.surface}
+                maximumTrackTintColor="#555555"
                 thumbTintColor={colors.secondary}
               />
             </View>
@@ -272,6 +294,17 @@ const styles = StyleSheet.create({
     color: '#E74C3C',
     fontSize: 14,
     fontWeight: '600',
+    padding: spacing.xs,
+  },
+  taxDeductionInput: {
+    color: '#E74C3C',
+    fontSize: 14,
+    fontWeight: '600',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E74C3C',
+    padding: 0,
+    minWidth: 50,
+    textAlign: 'center',
   },
   taxEmoji: {
     fontSize: 20,
