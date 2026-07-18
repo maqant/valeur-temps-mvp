@@ -56,9 +56,9 @@ export const translations = {
     cancelBtn: 'J\'abandonne l\'achat 💸',
     buyInsteadBtn: 'Que puis-je acheter à la place ? 🤔',
     equivalentsTitle: 'Si tu n\'achètes pas ça, tu pourrais te payer :',
-    eqPasta: 'paquets de pâtes',
+    eqPasta: 'paquets de pâtes 1er prix',
     eqCoffee: 'cafés avec un ami',
-    eqBook: 'livres',
+    eqBook: 'livres de poche',
     eqSP500: 'Investi dans le S&P500',
 
     // Time units
@@ -122,9 +122,9 @@ export const translations = {
     cancelBtn: 'I\'m not buying it 💸',
     buyInsteadBtn: 'What else could I buy? 🤔',
     equivalentsTitle: 'If you don\'t buy this, you could afford:',
-    eqPasta: 'packs of pasta',
+    eqPasta: 'cheap packs of pasta',
     eqCoffee: 'coffees with a friend',
-    eqBook: 'books',
+    eqBook: 'paperback books',
     eqSP500: 'Invested in S&P500',
 
     // Time units

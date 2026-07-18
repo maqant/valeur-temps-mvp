@@ -449,7 +449,7 @@ export const MainScreen = () => {
                         <Text style={styles.equivalentIcon}>🍝</Text>
                         <View style={styles.equivalentInfo}>
                           <Text style={styles.equivalentName}>{t('eqPasta')}</Text>
-                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 1.0)}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 0.8)}</Text>
                         </View>
                       </View>
                       
