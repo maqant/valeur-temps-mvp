@@ -13,6 +13,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const [salary, setSalary] = useState('');
   const [taxRate, setTaxRate] = useState(0);
   const [isEditingTax, setIsEditingTax] = useState(false);
+  const [taxInputValue, setTaxInputValue] = useState('');
   const [hours, setHours] = useState('');
   const [currency, setCurrency] = useState('\u20ac');
   const [localLang, setLocalLang] = useState('fr');
@@ -151,19 +152,31 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                       autoFocus
                       onBlur={() => setIsEditingTax(false)}
                       onChangeText={(text) => {
-                        const val = parseFloat(text.replace(',', '.'));
+                        if (text === "") {
+                          setTaxInputValue("");
+                          setTaxRate(0);
+                          return;
+                        }
+
+                        let cleaned = text.replace(/^0+(?=\d)/, '');
+                        cleaned = cleaned.replace(',', '.');
+                        
+                        setTaxInputValue(cleaned);
+
+                        const val = parseFloat(cleaned);
                         if (!isNaN(val) && val >= 0) {
                           let newRate = Math.round((val / parsedSalaryForUI) * 100);
                           if (newRate > 90) newRate = 90;
                           setTaxRate(newRate);
-                        } else if (text === '') {
-                          setTaxRate(0);
                         }
                       }}
-                      value={(parsedSalaryForUI * (taxRate / 100)).toFixed(0).toString()}
+                      value={taxInputValue}
                     />
                   ) : (
-                    <TouchableOpacity onPress={() => setIsEditingTax(true)}>
+                    <TouchableOpacity onPress={() => {
+                      setTaxInputValue((parsedSalaryForUI * (taxRate / 100)).toFixed(0).toString());
+                      setIsEditingTax(true);
+                    }}>
                       <Text style={styles.taxDeduction}>
                         - {(parsedSalaryForUI * (taxRate / 100)).toFixed(0)} {currency}
                       </Text>

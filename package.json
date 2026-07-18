@@ -1,6 +1,6 @@
 {
   "name": "myapp",
-  "version": "1.13.8",
+  "version": "1.13.9",
   "main": "index.js",
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
