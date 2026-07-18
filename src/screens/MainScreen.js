@@ -23,6 +23,7 @@ export const MainScreen = () => {
   const { isAdFree } = usePremium();
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [settings, setSettings] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [interstitialLoaded, setInterstitialLoaded] = useState(false);
 
@@ -139,7 +140,7 @@ export const MainScreen = () => {
     const parsedUses = parseInt(uses) || 1;
 
     if (isNaN(parsedPrice) || parsedPrice <= 0) {
-      return { timeCost: empty, costPerUse: 0, timePerUse: empty };
+      return { timeCost: empty, costPerUse: 0, timePerUse: empty, hourlyRate: 0 };
     }
 
     const hourlyRate = calculateHourlyRate(settings.salary, settings.hours, settings.taxRate || 0);
@@ -149,7 +150,7 @@ export const MainScreen = () => {
     const perUseCost = parsedPrice / parsedUses;
     const timeForOneUse = convertCostToTime(perUseCost, hourlyRate, workDayHours);
 
-    return { timeCost: totalTime, costPerUse: perUseCost, timePerUse: timeForOneUse };
+    return { timeCost: totalTime, costPerUse: perUseCost, timePerUse: timeForOneUse, hourlyRate };
   }, [price, uses, settings]);
 
   // Animation & Heartbeat Sound Effect
@@ -259,6 +260,8 @@ export const MainScreen = () => {
 
   const parsedPrice = parseFloat(price) || 0;
   const currencySym = settings?.currency || '€';
+  const taxAmount = settings ? (settings.salary * ((settings.taxRate || 0) / 100)).toFixed(0) : 0;
+  const monthlyHours = settings ? (settings.hours * 4.33).toFixed(1) : 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -300,6 +303,7 @@ export const MainScreen = () => {
                   setPrice('');
                   setUses('');
                   setShowEquivalents(false);
+                  setShowDetails(false);
                 }}
               >
                 <Text style={styles.resetButtonText}>{t('resetCalcBtn')}</Text>
@@ -319,6 +323,7 @@ export const MainScreen = () => {
                     setIsSaved(false);
                     setShowConfetti(false);
                     setIsCostRevealed(false);
+                    setShowDetails(false);
                   }}
                   placeholder={t('pricePlaceholder')}
                   placeholderTextColor={colors.textSecondary}
@@ -395,6 +400,29 @@ export const MainScreen = () => {
                       <Text style={styles.resultValueSecondary}>{formatTimeResult(timePerUse)}</Text>
                     </View>
                   </View>
+
+                  <TouchableOpacity
+                    style={styles.detailsToggle}
+                    onPress={() => {
+                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                      setShowDetails(!showDetails);
+                    }}
+                  >
+                    <Text style={styles.detailsToggleText}>
+                      ⓘ {t('showDetailsBtn')} {showDetails ? '▲' : '▼'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showDetails && (
+                    <View style={styles.detailsContainer}>
+                      <Text style={styles.detailsText}>
+                        {t('calcStep1_pt1')} ({settings.salary} - {taxAmount}) / {monthlyHours}h = {hourlyRate.toFixed(2)} {currencySym}/h
+                      </Text>
+                      <Text style={styles.detailsText}>
+                        {t('calcStep2_pt1')} {parsedPrice} {currencySym} / {hourlyRate.toFixed(2)} {currencySym}
+                      </Text>
+                    </View>
+                  )}
 
                   {/* Nouvelles actions Fun */}
                   <View style={styles.actionsContainer}>
@@ -600,8 +628,29 @@ const styles = StyleSheet.create({
   },
   resultSubtext: {
     color: colors.textSecondary,
+    fontSize: 16,
+  },
+  detailsToggle: {
+    paddingVertical: spacing.s,
+    alignItems: 'center',
+    marginBottom: spacing.m,
+  },
+  detailsToggleText: {
+    color: colors.textSecondary,
     fontSize: 14,
-    marginTop: spacing.xs,
+  },
+  detailsContainer: {
+    backgroundColor: colors.surface,
+    padding: spacing.m,
+    borderRadius: borderRadius.m,
+    marginBottom: spacing.l,
+    alignItems: 'center',
+  },
+  detailsText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginBottom: 4,
+    textAlign: 'center',
   },
   actionsContainer: {
     marginTop: spacing.l,

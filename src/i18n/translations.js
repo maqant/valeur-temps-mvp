@@ -41,6 +41,11 @@ export const translations = {
     // MainScreen — empty state
     emptyState: 'Entre un prix pour voir combien de temps tu vas devoir transpirer.',
 
+    // Details
+    showDetailsBtn: 'Voir le détail du calcul',
+    calcStep1_pt1: 'Taux horaire réel =',
+    calcStep2_pt1: 'Coût en temps =',
+
     // MainScreen - saved state
     savedTitle: 'Bravo ! 🎉',
     savedText: 'Tu as été fort. Ton banquier est fier de toi.',
@@ -101,6 +106,11 @@ export const translations = {
 
     // MainScreen — empty state
     emptyState: 'Enter a price to see how long you\'ll have to sweat for it.',
+
+    // Details
+    showDetailsBtn: 'View calculation details',
+    calcStep1_pt1: 'Real hourly rate =',
+    calcStep2_pt1: 'Time cost =',
 
     // MainScreen - saved state
     savedTitle: 'Well done! 🎉',
