@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
+import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert, SafeAreaView } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme/theme';
 import Slider from '@react-native-community/slider';
@@ -78,12 +78,17 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.container}
         >
-          <View style={styles.modalContent}>
-            {initialData && onClose && (
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            )}
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.modalContent}>
+              {initialData && onClose && (
+                <TouchableOpacity 
+                  style={styles.closeButton} 
+                  onPress={onClose}
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                >
+                  <Text style={styles.closeButtonText}>✕</Text>
+                </TouchableOpacity>
+              )}
             <Text style={styles.title}>{tLocal('settingsTitle')}</Text>
             <Text style={styles.subtitle}>{tLocal('settingsSubtitle')}</Text>
 
@@ -222,7 +227,8 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
               <Text style={styles.buttonText}>{tLocal('saveButton')}</Text>
             </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
     </Modal>
   );
@@ -231,13 +237,18 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  safeArea: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   modalContent: {
     backgroundColor: colors.surface,
-    padding: spacing.l,
+    paddingTop: spacing.l,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
     borderRadius: borderRadius.xl,
     width: '90%',
     maxWidth: 400,
