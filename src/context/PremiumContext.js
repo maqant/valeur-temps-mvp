@@ -10,9 +10,10 @@ export const PremiumProvider = ({ children }) => {
   const [isAdFree, setIsAdFree] = useState(false);
   const [premiumPrice, setPremiumPrice] = useState('1.99 €');
   const [isTrialActive, setIsTrialActive] = useState(true);
+  const [isLoadingPremium, setIsLoadingPremium] = useState(true);
 
   useEffect(() => {
-    const checkTrial = async () => {
+    const initialize = async () => {
       try {
         const storedDate = await AsyncStorage.getItem('@firstLaunchDate');
         if (!storedDate) {
@@ -20,17 +21,18 @@ export const PremiumProvider = ({ children }) => {
           setIsTrialActive(true);
         } else {
           const launchDate = new Date(storedDate);
-          const now = new Date();
-          const diffDays = Math.abs(now - launchDate) / (1000 * 60 * 60 * 24);
-          setIsTrialActive(diffDays <= 3);
+          if (isNaN(launchDate.getTime())) {
+            setIsTrialActive(false);
+          } else {
+            const now = new Date();
+            const diffDays = Math.abs(now - launchDate) / (1000 * 60 * 60 * 24);
+            setIsTrialActive(diffDays <= 3);
+          }
         }
       } catch (e) {
         console.warn("Error checking trial:", e);
       }
-    };
-    checkTrial();
 
-    const initPurchases = async () => {
       try {
         // LogLevel to debug during development
         Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
@@ -67,9 +69,11 @@ export const PremiumProvider = ({ children }) => {
       } catch (e) {
         console.warn("Error initializing RevenueCat:", e);
       }
+
+      setIsLoadingPremium(false);
     };
 
-    initPurchases();
+    initialize();
   }, []);
 
   const checkProEntitlement = (customerInfo) => {
@@ -128,6 +132,7 @@ export const PremiumProvider = ({ children }) => {
       isAdFree, 
       premiumPrice,
       isTrialActive,
+      isLoadingPremium,
       showPaywall, 
       showCustomerCenter, 
       restorePurchases 

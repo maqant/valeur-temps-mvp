@@ -35,7 +35,7 @@ const CustomFastFade = {
 
 export const MainScreen = () => {
   const { t, setLang } = useLanguage();
-  const { isAdFree, isTrialActive, showPaywall } = usePremium();
+  const { isAdFree, isTrialActive, showPaywall, isLoadingPremium } = usePremium();
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [settings, setSettings] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -71,7 +71,7 @@ export const MainScreen = () => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (isAdFree) return;
+    if (isLoadingPremium || isAdFree || isTrialActive) return;
     
     const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
       setInterstitialLoaded(true);
@@ -88,10 +88,10 @@ export const MainScreen = () => {
       unsubscribeLoaded();
       unsubscribeClosed();
     };
-  }, [isAdFree]);
+  }, [isAdFree, isTrialActive, isLoadingPremium]);
 
   const showInterstitialAdMaybe = () => {
-    if (isAdFree || !interstitialLoaded) return;
+    if (isLoadingPremium || isAdFree || isTrialActive || !interstitialLoaded) return;
     if (Math.random() < 0.3) {
       interstitial.show();
       setInterstitialLoaded(false);
@@ -527,13 +527,13 @@ export const MainScreen = () => {
         initialData={settings}
       />
 
-      {!isAdFree && isTrialActive && (
+      {!isLoadingPremium && !isAdFree && isTrialActive && (
         <TouchableOpacity style={styles.trialBanner} onPress={showPaywall}>
           <Text style={styles.trialText}>{t('supportMessage')}</Text>
         </TouchableOpacity>
       )}
 
-      {!isAdFree && !isTrialActive && (
+      {!isLoadingPremium && !isAdFree && !isTrialActive && (
         <View style={styles.bannerContainer}>
           <BannerAd
             unitId={TestIds.BANNER}
