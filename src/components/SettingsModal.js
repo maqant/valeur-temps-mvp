@@ -13,6 +13,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
   const [salary, setSalary] = useState('');
   const [taxRate, setTaxRate] = useState(0);
   const [isEditingTax, setIsEditingTax] = useState(false);
+  const [sliderKey, setSliderKey] = useState(0);
   const [hours, setHours] = useState('');
   const [currency, setCurrency] = useState('\u20ac');
   const [localLang, setLocalLang] = useState('fr');
@@ -151,6 +152,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
                           let newRate = (val / parsedSalaryForUI) * 100;
                           if (newRate > 90) newRate = 90;
                           setTaxRate(newRate);
+                          setSliderKey(k => k + 1);
                         }
                         setIsEditingTax(false);
                       }}
@@ -168,6 +170,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
               </View>
 
               <Slider
+                key={`tax-slider-${sliderKey}`}
                 style={{ width: '100%', height: 40 }}
                 minimumValue={0}
                 maximumValue={90}
