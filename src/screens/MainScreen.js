@@ -413,26 +413,26 @@ export const MainScreen = () => {
                       <Text style={styles.equivalentsTitle}>{t('equivalentsTitle')}</Text>
                       
                       <View style={styles.equivalentRow}>
-                        <Text style={styles.equivalentIcon}>🍔</Text>
+                        <Text style={styles.equivalentIcon}>🍝</Text>
                         <View style={styles.equivalentInfo}>
-                          <Text style={styles.equivalentName}>{t('eqBigMac')}</Text>
-                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 4.80)}</Text>
+                          <Text style={styles.equivalentName}>{t('eqPasta')}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 1.0)}</Text>
                         </View>
                       </View>
                       
                       <View style={styles.equivalentRow}>
-                        <Text style={styles.equivalentIcon}>🍿</Text>
+                        <Text style={styles.equivalentIcon}>☕</Text>
                         <View style={styles.equivalentInfo}>
-                          <Text style={styles.equivalentName}>{t('eqCinema')}</Text>
-                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 12)}</Text>
+                          <Text style={styles.equivalentName}>{t('eqCoffee')}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 5.0)}</Text>
                         </View>
                       </View>
 
                       <View style={styles.equivalentRow}>
-                        <Text style={styles.equivalentIcon}>📺</Text>
+                        <Text style={styles.equivalentIcon}>📚</Text>
                         <View style={styles.equivalentInfo}>
-                          <Text style={styles.equivalentName}>{t('eqNetflix')}</Text>
-                          <Text style={styles.equivalentValue}>{(parsedPrice / 8.99).toFixed(1)}</Text>
+                          <Text style={styles.equivalentName}>{t('eqBook')}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 8.0)}</Text>
                         </View>
                       </View>
 
