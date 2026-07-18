@@ -130,10 +130,10 @@ export const MainScreen = () => {
     setSettingsModalVisible(false);
   };
 
-  const { timeCost, costPerUse, timePerUse } = useMemo(() => {
+  const { timeCost, costPerUse, timePerUse, hourlyRate = 0 } = useMemo(() => {
     const empty = { days: 0, hours: 0, minutes: 0 };
     if (!settings || !price) {
-      return { timeCost: empty, costPerUse: 0, timePerUse: empty };
+      return { timeCost: empty, costPerUse: 0, timePerUse: empty, hourlyRate: 0 };
     }
 
     const parsedPrice = parseFloat(price);
