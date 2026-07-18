@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Purchases from 'react-native-purchases';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { Platform } from 'react-native';
@@ -8,8 +9,27 @@ const PremiumContext = createContext();
 export const PremiumProvider = ({ children }) => {
   const [isAdFree, setIsAdFree] = useState(false);
   const [premiumPrice, setPremiumPrice] = useState('1.99 €');
+  const [isTrialActive, setIsTrialActive] = useState(true);
 
   useEffect(() => {
+    const checkTrial = async () => {
+      try {
+        const storedDate = await AsyncStorage.getItem('@firstLaunchDate');
+        if (!storedDate) {
+          await AsyncStorage.setItem('@firstLaunchDate', new Date().toISOString());
+          setIsTrialActive(true);
+        } else {
+          const launchDate = new Date(storedDate);
+          const now = new Date();
+          const diffDays = Math.abs(now - launchDate) / (1000 * 60 * 60 * 24);
+          setIsTrialActive(diffDays <= 3);
+        }
+      } catch (e) {
+        console.warn("Error checking trial:", e);
+      }
+    };
+    checkTrial();
+
     const initPurchases = async () => {
       try {
         // LogLevel to debug during development
@@ -107,6 +127,7 @@ export const PremiumProvider = ({ children }) => {
     <PremiumContext.Provider value={{ 
       isAdFree, 
       premiumPrice,
+      isTrialActive,
       showPaywall, 
       showCustomerCenter, 
       restorePurchases 

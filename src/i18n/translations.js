@@ -61,6 +61,9 @@ export const translations = {
     eqBook: 'Livre de poche',
     eqSP500: 'Investi dans le S&P500',
 
+    // Support
+    supportMessage: '☕ Profitez de 3 jours sans pub ! Ensuite, de petites annonces apparaîtront pour soutenir mes projets. Envie de m\'offrir un café pour les retirer à vie ?',
+
     // Time units
     day: 'jour',
     days: 'jours',
@@ -125,7 +128,10 @@ export const translations = {
     eqPasta: 'Cheap pack of pasta',
     eqCoffee: 'Coffee with a friend',
     eqBook: 'Paperback book',
-    eqSP500: 'Invested in S&P500',
+    eqSP500: 'Invested in the S&P500',
+
+    // Support
+    supportMessage: '☕ Enjoy 3 days ad-free! After that, small ads will appear to support my projects. Want to buy me a coffee to remove them forever?',
 
     // Time units
     day: 'day',

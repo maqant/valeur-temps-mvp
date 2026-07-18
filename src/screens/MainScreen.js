@@ -35,7 +35,7 @@ const CustomFastFade = {
 
 export const MainScreen = () => {
   const { t, setLang } = useLanguage();
-  const { isAdFree } = usePremium();
+  const { isAdFree, isTrialActive, showPaywall } = usePremium();
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [settings, setSettings] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -527,7 +527,13 @@ export const MainScreen = () => {
         initialData={settings}
       />
 
-      {!isAdFree && (
+      {!isAdFree && isTrialActive && (
+        <TouchableOpacity style={styles.trialBanner} onPress={showPaywall}>
+          <Text style={styles.trialText}>{t('supportMessage')}</Text>
+        </TouchableOpacity>
+      )}
+
+      {!isAdFree && !isTrialActive && (
         <View style={styles.bannerContainer}>
           <BannerAd
             unitId={TestIds.BANNER}
@@ -740,6 +746,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     paddingVertical: spacing.xs,
+  },
+  trialBanner: {
+    backgroundColor: '#1E1E1E',
+    padding: spacing.m,
+    marginHorizontal: spacing.m,
+    marginBottom: spacing.m,
+    borderRadius: borderRadius.m,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+  },
+  trialText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   emptyStateContainer: {
     flex: 1,
