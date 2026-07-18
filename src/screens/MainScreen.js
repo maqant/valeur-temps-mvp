@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated, BackHandler } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated, BackHandler, LayoutAnimation } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
@@ -293,6 +293,7 @@ export const MainScreen = () => {
               <TouchableOpacity 
                 style={styles.resetButton} 
                 onPress={() => {
+                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                   setIsSaved(false);
                   setShowConfetti(false);
                   setPrice('');
@@ -345,6 +346,7 @@ export const MainScreen = () => {
                     onSubmitEditing={() => {
                       Keyboard.dismiss();
                       if (parsedPrice > 0) {
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                         setIsCostRevealed(true);
                         playKaching();
                         showInterstitialAdMaybe();
@@ -361,6 +363,7 @@ export const MainScreen = () => {
                   onValueChange={handleSliderChange}
                   onSlidingComplete={() => {
                     if (parsedPrice > 0) {
+                      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                       setIsCostRevealed(true);
                       playKaching();
                       showInterstitialAdMaybe();
