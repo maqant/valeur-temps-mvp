@@ -48,7 +48,7 @@ export const translations = {
 
     // MainScreen - saved state
     savedTitle: 'Bravo ! 🎉',
-    savedText: 'Tu as été fort. Ton banquier est fier de toi.',
+    savedText: 'Tu as été fort. Ton futur toi est fier de toi !',
     quitAppBtn: 'Quitter l\'appli et revenir à la raison',
     resetCalcBtn: 'Refaire un calcul',
 
@@ -114,7 +114,7 @@ export const translations = {
 
     // MainScreen - saved state
     savedTitle: 'Well done! 🎉',
-    savedText: 'You stayed strong. Your banker is proud of you.',
+    savedText: 'You stayed strong. Your future self is proud of you!',
     quitAppBtn: 'Quit app and return to sanity',
     resetCalcBtn: 'Calculate again',
 
