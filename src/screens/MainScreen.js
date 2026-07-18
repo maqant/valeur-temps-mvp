@@ -280,14 +280,14 @@ export const MainScreen = () => {
 
           {isSaved ? (
             <View style={styles.savedStateContainer}>
-              <Text style={styles.savedStateTitle}>Bravo ! 🎉</Text>
-              <Text style={styles.savedStateText}>Tu as été fort. Ton banquier est fier de toi.</Text>
+              <Text style={styles.savedStateTitle}>{t('savedTitle')}</Text>
+              <Text style={styles.savedStateText}>{t('savedText')}</Text>
               
               <TouchableOpacity 
                 style={styles.quitButton} 
                 onPress={() => BackHandler.exitApp()}
               >
-                <Text style={styles.quitButtonText}>Quitter l'appli et revenir à la raison</Text>
+                <Text style={styles.quitButtonText}>{t('quitAppBtn')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -300,7 +300,7 @@ export const MainScreen = () => {
                   setShowEquivalents(false);
                 }}
               >
-                <Text style={styles.resetButtonText}>Refaire un calcul</Text>
+                <Text style={styles.resetButtonText}>{t('resetCalcBtn')}</Text>
               </TouchableOpacity>
             </View>
           ) : (

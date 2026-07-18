@@ -41,6 +41,12 @@ export const translations = {
     // MainScreen — empty state
     emptyState: 'Entre un prix pour voir combien de temps tu vas devoir transpirer.',
 
+    // MainScreen - saved state
+    savedTitle: 'Bravo ! 🎉',
+    savedText: 'Tu as été fort. Ton banquier est fier de toi.',
+    quitAppBtn: 'Quitter l\'appli et revenir à la raison',
+    resetCalcBtn: 'Refaire un calcul',
+
     // Equivalents & Actions
     cancelBtn: 'J\'abandonne l\'achat 💸',
     buyInsteadBtn: 'Que puis-je acheter à la place ? 🤔',
@@ -95,6 +101,12 @@ export const translations = {
 
     // MainScreen — empty state
     emptyState: 'Enter a price to see how long you\'ll have to sweat for it.',
+
+    // MainScreen - saved state
+    savedTitle: 'Well done! 🎉',
+    savedText: 'You stayed strong. Your banker is proud of you.',
+    quitAppBtn: 'Quit app and return to sanity',
+    resetCalcBtn: 'Calculate again',
 
     // Equivalents & Actions
     cancelBtn: 'I\'m not buying it 💸',
