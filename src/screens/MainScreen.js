@@ -270,6 +270,7 @@ export const MainScreen = () => {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           <View style={styles.header}>
             <Text style={styles.appTitle}>{t('appTitle')}</Text>
@@ -362,6 +363,7 @@ export const MainScreen = () => {
                   value={parseInt(uses) || 1}
                   onValueChange={handleSliderChange}
                   onSlidingComplete={() => {
+                    Keyboard.dismiss();
                     if (parsedPrice > 0) {
                       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                       setIsCostRevealed(true);

@@ -2,7 +2,7 @@
   "expo": {
     "name": "myapp",
     "slug": "myapp",
-    "version": "1.12.6",
+    "version": "1.12.7",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

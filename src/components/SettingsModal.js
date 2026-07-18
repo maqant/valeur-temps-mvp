@@ -46,6 +46,7 @@ export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
       return;
     }
 
+    Keyboard.dismiss();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onSave({ salary: parsedSalary, hours: parsedHours, lang: localLang, currency, taxRate });
   };
