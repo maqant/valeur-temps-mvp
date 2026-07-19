@@ -1,0 +1,1761 @@
+
+
+========================================================
+File: App.js
+========================================================
+
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, View, Platform, UIManager } from 'react-native';
+
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { MainScreen } from './src/screens/MainScreen';
+import { LanguageProvider } from './src/i18n/LanguageContext';
+import { PremiumProvider } from './src/context/PremiumContext';
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <PremiumProvider>
+        <LanguageProvider>
+          <View style={styles.container}>
+            <StatusBar style="light" />
+            <MainScreen />
+          </View>
+        </LanguageProvider>
+      </PremiumProvider>
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+});
+
+
+========================================================
+File: index.js
+========================================================
+
+import { registerRootComponent } from 'expo';
+
+import App from './App';
+
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+// It also ensures that whether you load the app in Expo Go or in a native build,
+// the environment is set up appropriately
+registerRootComponent(App);
+
+
+========================================================
+File: src/components/SettingsModal.js
+========================================================
+
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Modal, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert, SafeAreaView } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { colors, spacing, borderRadius } from '../theme/theme';
+import Slider from '@react-native-community/slider';
+import { useLanguage } from '../i18n/LanguageContext';
+import { translations } from '../i18n/translations';
+import { usePremium } from '../context/PremiumContext';
+
+export const SettingsModal = ({ visible, onSave, onClose, initialData }) => {
+  const { lang: globalLang } = useLanguage();
+  const { isAdFree, showPaywall, showCustomerCenter, premiumPrice } = usePremium();
+  const [salary, setSalary] = useState('');
+  const [taxRate, setTaxRate] = useState(0);
+  const [isEditingTax, setIsEditingTax] = useState(false);
+  const [taxInputValue, setTaxInputValue] = useState('');
+  const [hours, setHours] = useState('');
+  const [currency, setCurrency] = useState('\u20ac');
+  const [localLang, setLocalLang] = useState('fr');
+
+  const tLocal = (key) => translations[localLang]?.[key] || key;
+
+  useEffect(() => {
+    if (initialData) {
+      const initialSalary = initialData.salary;
+      setSalary((initialSalary && initialSalary !== 0 && initialSalary !== '0') ? initialSalary.toString() : '');
+      setTaxRate(initialData.taxRate || 0);
+      setHours(initialData.hours ? initialData.hours.toString() : '');
+      if (initialData.currency) {
+        setCurrency(initialData.currency);
+      }
+      if (initialData.lang) {
+        setLocalLang(initialData.lang);
+      } else {
+        setLocalLang(globalLang);
+      }
+    } else {
+      setLocalLang(globalLang);
+    }
+  }, [initialData, globalLang]);
+
+  const handleSave = () => {
+    const parsedSalary = parseFloat(salary);
+    const parsedHours = parseFloat(hours);
+
+    if (isNaN(parsedSalary) || isNaN(parsedHours) || parsedSalary <= 0 || parsedHours <= 0) {
+      alert(tLocal('validationError'));
+      return;
+    }
+
+    Keyboard.dismiss();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onSave({ salary: parsedSalary, hours: parsedHours, lang: localLang, currency, taxRate });
+  };
+
+  const getTaxEmoji = (rate) => {
+    if (rate <= 30) return '🤑';
+    if (rate <= 60) return '🏠';
+    return '☠️';
+  };
+
+  const parsedSalaryForUI = parseFloat(salary) || 0;
+
+  const handlePurchase = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await showPaywall();
+    // La mise à jour de isAdFree se fait automatiquement via le listener dans PremiumContext
+  };
+
+  const handleManageSubscription = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await showCustomerCenter();
+  };
+
+  return (
+    <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={() => { if (initialData && onClose) onClose(); }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.container}
+        >
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.modalContent}>
+              {initialData && onClose && (
+                <TouchableOpacity 
+                  style={styles.closeButton} 
+                  onPress={onClose}
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                >
+                  <Text style={styles.closeButtonText}>✕</Text>
+                </TouchableOpacity>
+              )}
+            <Text style={styles.title}>{tLocal('settingsTitle')}</Text>
+            <Text style={styles.subtitle}>{tLocal('settingsSubtitle')}</Text>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{tLocal('languageLabel')}</Text>
+              <View style={styles.langRow}>
+                {['fr', 'en'].map((code) => (
+                  <TouchableOpacity
+                    key={code}
+                    style={[styles.langButton, localLang === code && styles.langButtonActive]}
+                    onPress={() => setLocalLang(code)}
+                  >
+                    <Text style={[styles.langButtonText, localLang === code && styles.langButtonTextActive]}>
+                      {code.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Sélecteur de devise */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{tLocal('currencyLabel')}</Text>
+              <View style={styles.langRow}>
+                {['\u20ac', '$'].map((sym) => (
+                  <TouchableOpacity
+                    key={sym}
+                    style={[styles.langButton, currency === sym && styles.langButtonActive]}
+                    onPress={() => setCurrency(sym)}
+                  >
+                    <Text style={[styles.langButtonText, currency === sym && styles.langButtonTextActive]}>
+                      {sym}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{tLocal('salaryLabel')}</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.inputNoBorder}
+                  keyboardType="numeric"
+                  value={salary}
+                  onChangeText={setSalary}
+                  placeholder={tLocal('salaryPlaceholder')}
+                  placeholderTextColor={colors.textSecondary}
+                />
+                <Text style={[styles.currencySuffix, { color: (!salary || salary === '') ? colors.textSecondary : colors.text }]}>{currency}</Text>
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{tLocal('taxLabel') || 'Taxe de la vraie vie (Loyer, factures...)'}</Text>
+              
+              <View style={styles.taxHeader}>
+                <Text style={styles.taxValue}>{Math.round(taxRate)}%</Text>
+                {parsedSalaryForUI > 0 && (
+                  isEditingTax ? (
+                    <TextInput
+                      style={styles.taxDeductionInput}
+                      keyboardType="numeric"
+                      autoFocus
+                      onBlur={() => setIsEditingTax(false)}
+                      onChangeText={(text) => {
+                        if (text === "") {
+                          setTaxInputValue("");
+                          setTaxRate(0);
+                          return;
+                        }
+
+                        let cleaned = text.replace(/^0+(?=\d)/, '');
+                        cleaned = cleaned.replace(',', '.');
+                        
+                        setTaxInputValue(cleaned);
+
+                        const val = parseFloat(cleaned);
+                        if (!isNaN(val) && val >= 0) {
+                          let newRate = Math.round((val / parsedSalaryForUI) * 100);
+                          if (newRate > 90) newRate = 90;
+                          setTaxRate(newRate);
+                        }
+                      }}
+                      value={taxInputValue}
+                    />
+                  ) : (
+                    <TouchableOpacity onPress={() => {
+                      setTaxInputValue((parsedSalaryForUI * (taxRate / 100)).toFixed(0).toString());
+                      setIsEditingTax(true);
+                    }}>
+                      <Text style={styles.taxDeduction}>
+                        - {(parsedSalaryForUI * (taxRate / 100)).toFixed(0)} {currency}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                )}
+                <Text style={styles.taxEmoji}>{getTaxEmoji(taxRate)}</Text>
+              </View>
+
+              <Slider
+                style={{ width: '100%', height: 40 }}
+                minimumValue={0}
+                maximumValue={90}
+                step={1}
+                value={taxRate}
+                onValueChange={setTaxRate}
+                minimumTrackTintColor={colors.secondary}
+                maximumTrackTintColor="#555555"
+                thumbTintColor={colors.secondary}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{tLocal('hoursLabel')}</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={hours}
+                onChangeText={setHours}
+                placeholder={tLocal('hoursPlaceholder')}
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+
+            {!isAdFree ? (
+              <View style={styles.premiumContainer}>
+                <Text style={styles.premiumTitle}>{tLocal('premiumTitle')}</Text>
+                <TouchableOpacity style={styles.premiumButton} onPress={handlePurchase}>
+                  <Text style={styles.premiumButtonText}>{tLocal('removeAdsBtn')} ({premiumPrice})</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.premiumContainer}>
+                <Text style={styles.premiumTitle}>{tLocal('premiumActiveTitle') || 'SweatCost Pro Actif 💎'}</Text>
+                <TouchableOpacity style={styles.premiumButton} onPress={handleManageSubscription}>
+                  <Text style={styles.premiumButtonText}>{tLocal('managePurchaseBtn') || 'Gérer mon achat'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <TouchableOpacity 
+              style={styles.howItWorksLink} 
+              onPress={() => Alert.alert(tLocal('howItWorksTitle'), tLocal('howItWorksText'))}
+            >
+              <Text style={styles.howItWorksText}>{tLocal('howItWorksBtn')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.button} onPress={handleSave}>
+              <Text style={styles.buttonText}>{tLocal('saveButton')}</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  safeArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    paddingTop: spacing.l,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    borderRadius: borderRadius.xl,
+    width: '90%',
+    maxWidth: 400,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 1,
+    padding: 8,
+  },
+  closeButtonText: {
+    color: colors.textSecondary,
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  title: {
+    color: colors.primary,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: spacing.s,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginBottom: spacing.l,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  inputContainer: {
+    marginBottom: spacing.m,
+  },
+  label: {
+    color: colors.text,
+    marginBottom: spacing.xs,
+    fontSize: 14,
+  },
+  input: {
+    backgroundColor: colors.background,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+    borderRadius: borderRadius.m,
+    padding: spacing.m,
+    fontSize: 16,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+    borderRadius: borderRadius.m,
+    paddingHorizontal: spacing.m,
+  },
+  inputNoBorder: {
+    flex: 1,
+    color: colors.text,
+    paddingVertical: spacing.m,
+    fontSize: 16,
+  },
+  currencySuffix: {
+    fontSize: 16,
+    color: colors.text,
+    marginLeft: 4,
+  },
+  taxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  taxValue: {
+    color: colors.primary,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  taxDeduction: {
+    color: '#E74C3C',
+    fontSize: 14,
+    fontWeight: '600',
+    padding: spacing.xs,
+  },
+  taxDeductionInput: {
+    color: '#E74C3C',
+    fontSize: 14,
+    fontWeight: '600',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E74C3C',
+    padding: 0,
+    minWidth: 50,
+    textAlign: 'center',
+  },
+  taxEmoji: {
+    fontSize: 20,
+  },
+  langRow: {
+    flexDirection: 'row',
+    gap: spacing.s,
+  },
+  langButton: {
+    flex: 1,
+    paddingVertical: spacing.s,
+    borderRadius: borderRadius.m,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  langButtonActive: {
+    backgroundColor: colors.secondary,
+  },
+  langButtonText: {
+    color: colors.secondary,
+    fontWeight: 'bold',
+    fontSize: 15,
+    letterSpacing: 1,
+  },
+  langButtonTextActive: {
+    color: colors.background,
+  },
+  howItWorksLink: {
+    alignItems: 'center',
+    marginBottom: spacing.m,
+  },
+  howItWorksText: {
+    color: colors.secondary,
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  button: {
+    backgroundColor: colors.primary,
+    padding: spacing.m,
+    borderRadius: borderRadius.m,
+    alignItems: 'center',
+    marginTop: spacing.m,
+  },
+  buttonText: {
+    color: colors.background,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  premiumContainer: {
+    marginTop: spacing.s,
+    marginBottom: spacing.l,
+    alignItems: 'center',
+    padding: spacing.s,
+    borderWidth: 1,
+    borderColor: '#F1C40F',
+    borderRadius: borderRadius.m,
+    backgroundColor: 'rgba(241, 196, 15, 0.05)',
+  },
+  premiumTitle: {
+    color: '#F1C40F',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: spacing.s,
+  },
+  premiumButton: {
+    backgroundColor: '#F1C40F',
+    paddingVertical: spacing.s,
+    paddingHorizontal: spacing.l,
+    borderRadius: borderRadius.m,
+  },
+  premiumButtonText: {
+    color: '#121212',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+});
+
+
+========================================================
+File: src/context/PremiumContext.js
+========================================================
+
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Purchases from 'react-native-purchases';
+import RevenueCatUI from 'react-native-purchases-ui';
+import { Platform } from 'react-native';
+
+const PremiumContext = createContext();
+
+export const PremiumProvider = ({ children }) => {
+  const [isAdFree, setIsAdFree] = useState(false);
+  const [premiumPrice, setPremiumPrice] = useState('1.99 €');
+  const [isTrialActive, setIsTrialActive] = useState(true);
+  const [isLoadingPremium, setIsLoadingPremium] = useState(true);
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        const storedDate = await AsyncStorage.getItem('@firstLaunchDate');
+        if (!storedDate) {
+          await AsyncStorage.setItem('@firstLaunchDate', new Date().toISOString());
+          setIsTrialActive(true);
+        } else {
+          const launchDate = new Date(storedDate);
+          if (isNaN(launchDate.getTime())) {
+            setIsTrialActive(false);
+          } else {
+            const now = new Date();
+            const diffDays = Math.abs(now - launchDate) / (1000 * 60 * 60 * 24);
+            setIsTrialActive(diffDays <= 3);
+          }
+        }
+      } catch (e) {
+        console.warn("Error checking trial:", e);
+      }
+
+      try {
+        // LogLevel to debug during development
+        Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+
+        const apiKey = "test_LhxGwEpDUtADowWtmUdAjohcfDj";
+        if (Platform.OS === 'ios') {
+          await Purchases.configure({ apiKey });
+        } else if (Platform.OS === 'android') {
+          await Purchases.configure({ apiKey });
+        }
+        
+        // Initial check
+        const customerInfo = await Purchases.getCustomerInfo();
+        checkProEntitlement(customerInfo);
+
+        // Fetch offerings to get priceString
+        try {
+          const offerings = await Purchases.getOfferings();
+          if (offerings.current && offerings.current.availablePackages.length > 0) {
+            const pkg = offerings.current.availablePackages[0];
+            if (pkg && pkg.product && pkg.product.priceString) {
+              setPremiumPrice(pkg.product.priceString);
+            }
+          }
+        } catch (e) {
+          console.warn("Could not fetch offerings for price:", e);
+        }
+
+        // Best Practice: Add a listener for customer info updates (purchases, expiration, etc.)
+        Purchases.addCustomerInfoUpdateListener((info) => {
+          checkProEntitlement(info);
+        });
+
+      } catch (e) {
+        console.warn("Error initializing RevenueCat:", e);
+      }
+
+      setIsLoadingPremium(false);
+    };
+
+    initialize();
+  }, []);
+
+  const checkProEntitlement = (customerInfo) => {
+    // We check for the specific entitlement named 'SweatCost Pro'
+    if (typeof customerInfo.entitlements.active['SweatCost Pro'] !== 'undefined') {
+      setIsAdFree(true);
+    } else {
+      setIsAdFree(false);
+    }
+  };
+
+  const showPaywall = async () => {
+    try {
+      // Using RevenueCatUI to present the paywall built in the dashboard
+      const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
+        requiredEntitlementIdentifier: 'SweatCost Pro',
+      });
+      
+      switch (paywallResult) {
+        case RevenueCatUI.PAYWALL_RESULT.PURCHASED:
+        case RevenueCatUI.PAYWALL_RESULT.RESTORED:
+          return true;
+        case RevenueCatUI.PAYWALL_RESULT.CANCELLED:
+        case RevenueCatUI.PAYWALL_RESULT.ERROR:
+        default:
+          return false;
+      }
+    } catch (e) {
+      console.warn('Error presenting paywall:', e);
+      return false;
+    }
+  };
+
+  const showCustomerCenter = async () => {
+    try {
+      // Allow user to manage their purchases/subscriptions
+      await RevenueCatUI.presentCustomerCenter();
+    } catch (e) {
+      console.warn('Error presenting Customer Center:', e);
+    }
+  };
+
+  const restorePurchases = async () => {
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+      checkProEntitlement(customerInfo);
+      return typeof customerInfo.entitlements.active['SweatCost Pro'] !== 'undefined';
+    } catch (e) {
+      console.warn('Restore error:', e);
+      return false;
+    }
+  };
+
+  return (
+    <PremiumContext.Provider value={{ 
+      isAdFree, 
+      premiumPrice,
+      isTrialActive,
+      isLoadingPremium,
+      showPaywall, 
+      showCustomerCenter, 
+      restorePurchases 
+    }}>
+      {children}
+    </PremiumContext.Provider>
+  );
+};
+
+export const usePremium = () => useContext(PremiumContext);
+
+
+========================================================
+File: src/i18n/LanguageContext.js
+========================================================
+
+﻿import React, { createContext, useContext, useState, useCallback } from 'react';
+import { translations, DEFAULT_LANGUAGE } from './translations';
+
+const LanguageContext = createContext(null);
+
+export const LanguageProvider = ({ children, initialLang }) => {
+  const [lang, setLang] = useState(initialLang || DEFAULT_LANGUAGE);
+
+  const t = useCallback(
+    (key) => translations[lang]?.[key] ?? translations[DEFAULT_LANGUAGE][key] ?? key,
+    [lang]
+  );
+
+  return (
+    <LanguageContext.Provider value={{ lang, setLang, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = () => {
+  const ctx = useContext(LanguageContext);
+  if (!ctx) throw new Error('useLanguage must be used inside LanguageProvider');
+  return ctx;
+};
+
+
+========================================================
+File: src/i18n/translations.js
+========================================================
+
+// Dictionnaire de traductions FR / EN
+// Ajoutez de nouvelles langues en dupliquant un bloc et en changeant la cle.
+
+export const translations = {
+  fr: {
+    // App
+    appTitle: 'SweatCost',
+
+    // SettingsModal
+    settingsTitle: 'Combien vaut ta sueur ?',
+    settingsSubtitle: 'Dis-nous combien tu gagnes, promis on ne juge pas.',
+    currencyLabel: 'Devise',
+    salaryLabel: 'Salaire net mensuel',
+    salaryPlaceholder: '0',
+    hoursLabel: 'Heures de taf par semaine',
+    hoursPlaceholder: 'Ex : 35',
+    saveButton: 'C\'est parti !',
+    validationError: 'Veuillez entrer des valeurs valides supérieures à zéro.',
+    languageLabel: 'Langue / Language',
+    howItWorksBtn: 'Comprendre le calcul 🧮',
+    howItWorksTitle: 'Le secret du calcul',
+    howItWorksText: 'Pour être précis, on divise votre salaire par vos heures mensuelles. On trouve vos heures mensuelles en multipliant vos heures hebdos par 4,33 (la moyenne des semaines dans un mois : 52 semaines / 12 mois).',
+    premiumTitle: "Vous détestez les pubs ?",
+    removeAdsBtn: "Supprimer les pubs à vie",
+    premiumActiveTitle: "SweatCost Pro Actif 💎",
+    managePurchaseBtn: "Gérer mon achat",
+    removeAdsSuccess: "Merci pour votre achat ! Les publicités ont été supprimées.",
+    taxLabel: "Taxe de la vraie vie (Loyer, factures...)",
+
+    // MainScreen — inputs
+    priceLabel: 'Ça coûte combien ?',
+    pricePlaceholder: '0.00',
+    usesLabel: 'Tu vas vraiment t\'en servir combien de fois ?',
+
+    // MainScreen — results
+    resultMainLabel: 'Ce petit plaisir va te coûter :',
+    resultMainSubtext: 'de ta vie au boulot',
+    resultCostPerUse: 'Prix par utilisation',
+    resultTimePerUse: 'Temps de travail par utilisation',
+
+    // MainScreen — empty state
+    emptyState: 'Entre un prix pour voir combien de temps tu vas devoir transpirer.',
+
+    // Details
+    showDetailsBtn: 'Voir le détail du calcul',
+    calcStep1_pt1: 'Taux horaire réel =',
+    calcStep2_pt1: 'Coût en temps =',
+
+    // MainScreen - saved state
+    savedTitle: 'Bravo ! 🎉',
+    savedText: 'Tu as été fort. Ton futur toi est fier de toi !',
+    quitAppBtn: 'Quitter l\'appli et revenir à la raison',
+    resetCalcBtn: 'Refaire un calcul',
+
+    // Equivalents & Actions
+    cancelBtn: 'J\'abandonne l\'achat 💸',
+    buyInsteadBtn: 'Que puis-je acheter à la place ? 🤔',
+    equivalentsTitle: 'Si tu n\'achètes pas ça, tu pourrais te payer :',
+    eqPasta: 'Paquet de pâtes 1er prix',
+    eqCoffee: 'Café avec un ami',
+    eqBook: 'Livre de poche',
+    eqSP500: 'Investi dans le S&P500',
+
+    // Support
+    supportMessage: '☕ Profitez de 3 jours sans pub ! Ensuite, de petites annonces apparaîtront pour soutenir mes projets. Envie de m\'offrir un café pour les retirer à vie ?',
+
+    // Time units
+    day: 'jour',
+    days: 'jours',
+    hour: 'h',
+    minute: 'min',
+  },
+
+  en: {
+    // App
+    appTitle: 'SweatCost',
+
+    // SettingsModal
+    settingsTitle: 'What\'s your sweat worth?',
+    settingsSubtitle: 'Tell us what you earn, we promise we won\'t judge.',
+    currencyLabel: 'Currency',
+    salaryLabel: 'Monthly net salary',
+    salaryPlaceholder: '0',
+    hoursLabel: 'Work hours per week',
+    hoursPlaceholder: 'E.g. 35',
+    saveButton: 'Let\'s go!',
+    validationError: 'Please enter valid values greater than zero.',
+    languageLabel: 'Langue / Language',
+    howItWorksBtn: 'How is this calculated? 🧮',
+    howItWorksTitle: 'The math behind the magic',
+    howItWorksText: 'To be hyper-accurate, we divide your salary by your monthly hours. We find your monthly hours by multiplying your weekly hours by 4.33 (the average weeks in a month: 52 weeks / 12 months).',
+    premiumTitle: "Hate ads?",
+    removeAdsBtn: "Remove ads forever",
+    premiumActiveTitle: "SweatCost Pro Active 💎",
+    managePurchaseBtn: "Manage my purchase",
+    removeAdsSuccess: "Thank you for your purchase! Ads have been removed.",
+    taxLabel: "Real life tax (Rent, bills...)",
+
+    // MainScreen — inputs
+    priceLabel: 'Price of this whim?',
+    pricePlaceholder: '0.00',
+    usesLabel: 'How many times will you actually use it?',
+
+    // MainScreen — results
+    resultMainLabel: 'This little treat will cost you:',
+    resultMainSubtext: 'of your life at work',
+    resultCostPerUse: 'Real cost per use',
+    resultTimePerUse: 'Time at work per use',
+
+    // MainScreen — empty state
+    emptyState: 'Enter a price to see how long you\'ll have to sweat for it.',
+
+    // Details
+    showDetailsBtn: 'View calculation details',
+    calcStep1_pt1: 'Real hourly rate =',
+    calcStep2_pt1: 'Time cost =',
+
+    // MainScreen - saved state
+    savedTitle: 'Well done! 🎉',
+    savedText: 'You stayed strong. Your future self is proud of you!',
+    quitAppBtn: 'Quit app and return to sanity',
+    resetCalcBtn: 'Calculate again',
+
+    // Equivalents & Actions
+    cancelBtn: 'I\'m not buying it 💸',
+    buyInsteadBtn: 'What else could I buy? 🤔',
+    equivalentsTitle: 'If you don\'t buy this, you could afford:',
+    eqPasta: 'Cheap pack of pasta',
+    eqCoffee: 'Coffee with a friend',
+    eqBook: 'Paperback book',
+    eqSP500: 'Invested in the S&P500',
+
+    // Support
+    supportMessage: '☕ Enjoy 3 days ad-free! After that, small ads will appear to support my projects. Want to buy me a coffee to remove them forever?',
+
+    // Time units
+    day: 'day',
+    days: 'days',
+    hour: 'h',
+    minute: 'min',
+  },
+};
+
+export const DEFAULT_LANGUAGE = 'fr';
+
+
+========================================================
+File: src/screens/MainScreen.js
+========================================================
+
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableWithoutFeedback, Keyboard, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Animated, BackHandler, LayoutAnimation } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
+import * as Haptics from 'expo-haptics';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import ConfettiCannon from 'react-native-confetti-cannon';
+import { colors, spacing, borderRadius } from '../theme/theme';
+import { SettingsModal } from '../components/SettingsModal';
+import { loadSettings, saveSettings } from '../utils/storage';
+import { calculateHourlyRate, calculateWorkDayHours, convertCostToTime } from '../utils/calculations';
+import { useLanguage } from '../i18n/LanguageContext';
+import { InterstitialAd, AdEventType, TestIds, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import { usePremium } from '../context/PremiumContext';
+
+const interstitial = InterstitialAd.createForAdRequest(TestIds.INTERSTITIAL, {
+  requestNonPersonalizedAdsOnly: true,
+});
+
+const CustomFastFade = {
+  duration: 150,
+  create: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+  update: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+  },
+  delete: {
+    type: LayoutAnimation.Types.easeInEaseOut,
+    property: LayoutAnimation.Properties.opacity,
+  },
+};
+
+export const MainScreen = () => {
+  const { t, setLang } = useLanguage();
+  const { isAdFree, isTrialActive, showPaywall, isLoadingPremium } = usePremium();
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [settings, setSettings] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [interstitialLoaded, setInterstitialLoaded] = useState(false);
+
+  const [price, setPrice] = useState('');
+  const [uses, setUses] = useState('');
+  
+  // New fun states
+  const [showEquivalents, setShowEquivalents] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiKey, setConfettiKey] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isCostRevealed, setIsCostRevealed] = useState(false);
+
+  // Audio Players
+  const kachingPlayer = useAudioPlayer(require('../../assets/sounds/kaching.mp3'));
+  const cheerPlayer = useAudioPlayer(require('../../assets/sounds/cheer.mp3'));
+  const heartbeatPlayer = useAudioPlayer(require('../../assets/sounds/heartbeat.mp3'));
+
+  // Ref pour le volume
+  const volumeIntervalRef = useRef(null);
+
+  // Focus refs
+  const priceInputRef = useRef(null);
+  const usesInputRef = useRef(null);
+
+  // Ref pour throttler les haptics du slider
+  const lastHapticRef = useRef(0);
+
+  // Valeur d'animation pour les résultats
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (isLoadingPremium || isAdFree || isTrialActive) return;
+    
+    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+      setInterstitialLoaded(true);
+    });
+
+    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+      setInterstitialLoaded(false);
+      interstitial.load();
+    });
+
+    interstitial.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeClosed();
+    };
+  }, [isAdFree, isTrialActive, isLoadingPremium]);
+
+  const showInterstitialAdMaybe = () => {
+    if (isLoadingPremium || isAdFree || isTrialActive || !interstitialLoaded) return;
+    if (Math.random() < 0.3) {
+      interstitial.show();
+      setInterstitialLoaded(false);
+    }
+  };
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          interruptionMode: 'mixWithOthers',
+          shouldPlayInBackground: false,
+        });
+      } catch (e) {
+        console.log('Audio init error', e);
+      }
+
+      const savedSettings = await loadSettings();
+      if (savedSettings) {
+        setSettings(savedSettings);
+        if (savedSettings.lang) setLang(savedSettings.lang);
+      } else {
+        setSettingsModalVisible(true);
+      }
+      setIsReady(true);
+    };
+    initializeApp();
+  }, [setLang]);
+
+  // Clean up volume interval
+  useEffect(() => {
+    return () => {
+      if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isReady && !settingsModalVisible) {
+      const timer = setTimeout(() => {
+        priceInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isReady, settingsModalVisible]);
+
+  const handleSaveSettings = async (newSettings) => {
+    await saveSettings(newSettings);
+    setSettings(newSettings);
+    if (newSettings.lang) setLang(newSettings.lang);
+    setSettingsModalVisible(false);
+  };
+
+  const { timeCost, costPerUse, timePerUse, hourlyRate = 0 } = useMemo(() => {
+    const empty = { days: 0, hours: 0, minutes: 0 };
+    if (!settings || !price) {
+      return { timeCost: empty, costPerUse: 0, timePerUse: empty, hourlyRate: 0 };
+    }
+
+    const parsedPrice = parseFloat(price);
+    const parsedUses = parseInt(uses) || 1;
+
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      return { timeCost: empty, costPerUse: 0, timePerUse: empty, hourlyRate: 0 };
+    }
+
+    const hourlyRate = calculateHourlyRate(settings.salary, settings.hours, settings.taxRate || 0);
+    const workDayHours = calculateWorkDayHours(settings.hours);
+
+    const totalTime = convertCostToTime(parsedPrice, hourlyRate, workDayHours);
+    const perUseCost = parsedPrice / parsedUses;
+    const timeForOneUse = convertCostToTime(perUseCost, hourlyRate, workDayHours);
+
+    return { timeCost: totalTime, costPerUse: perUseCost, timePerUse: timeForOneUse, hourlyRate };
+  }, [price, uses, settings]);
+
+  // Animation & Heartbeat Sound Effect
+  useEffect(() => {
+    const manageHeartbeat = () => {
+      const currentParsedPrice = parseFloat(price);
+      const isShowingResults = currentParsedPrice > 0 && isCostRevealed;
+
+      if (isShowingResults && !isSaved) {
+        // Trigger Pop Animation
+        scaleAnim.setValue(0.95);
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 4,
+          tension: 100,
+          useNativeDriver: true,
+        }).start();
+
+        // Cœur qui bat si ça dépasse 1 jour
+        if (timeCost.days >= 1) {
+          if (!heartbeatPlayer.playing) {
+            heartbeatPlayer.loop = true;
+            heartbeatPlayer.volume = 0.4;
+            heartbeatPlayer.play();
+
+            let vol = 0.4;
+            if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
+            volumeIntervalRef.current = setInterval(() => {
+              vol += 0.05;
+              if (vol >= 1) {
+                vol = 1;
+                clearInterval(volumeIntervalRef.current);
+              }
+              heartbeatPlayer.volume = vol;
+            }, 1000);
+          }
+        } else {
+          // Redescend sous 1 jour
+          if (heartbeatPlayer.playing) {
+            heartbeatPlayer.pause();
+          }
+          if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
+        }
+      } else {
+        // Prix vide ou mode "sauvé"
+        setShowEquivalents(false);
+        if (heartbeatPlayer.playing) {
+          heartbeatPlayer.pause();
+        }
+        if (volumeIntervalRef.current) clearInterval(volumeIntervalRef.current);
+      }
+    };
+
+    manageHeartbeat();
+  }, [timeCost, price, isSaved, heartbeatPlayer, scaleAnim]);
+
+  const playKaching = () => {
+    kachingPlayer.volume = 0.8;
+    kachingPlayer.play();
+  };
+
+  const handleSliderChange = (value) => {
+    const rounded = Math.round(value);
+    if (rounded.toString() === uses) return;
+
+    const now = Date.now();
+    if (now - lastHapticRef.current > 100) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      lastHapticRef.current = now;
+    }
+    setUses(rounded.toString());
+  };
+
+  const handleCancelBuy = () => {
+    setIsSaved(true);
+    
+    // Décalage des confettis pour éviter le lag graphique pendant le changement de Vue
+    setTimeout(() => {
+      setShowConfetti(true);
+      setConfettiKey(prev => prev + 1);
+    }, 150);
+
+    if (heartbeatPlayer.playing) {
+      heartbeatPlayer.pause();
+    }
+    if (volumeIntervalRef.current) {
+      clearInterval(volumeIntervalRef.current);
+    }
+
+    // Clameur de la foule
+    cheerPlayer.seekTo(0);
+    cheerPlayer.volume = 1.0;
+    cheerPlayer.play();
+  };
+
+  const formatTimeResult = (time) => {
+    let result = [];
+    if (time.days > 0) result.push(`${time.days} ${time.days > 1 ? t('days') : t('day')}`);
+    if (time.hours > 0) result.push(`${time.hours} ${t('hour')}`);
+    if (time.minutes > 0) result.push(`${time.minutes} ${t('minute')}`);
+
+    if (result.length === 0) return `0 ${t('minute')}`;
+    return result.join(' ');
+  };
+
+  if (!isReady) return null;
+
+  const parsedPrice = parseFloat(price) || 0;
+  const currencySym = settings?.currency || '€';
+  const taxAmount = settings ? (settings.salary * ((settings.taxRate || 0) / 100)).toFixed(0) : 0;
+  const monthlyHours = settings ? (settings.hours * 4.33).toFixed(1) : 0;
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
+          <View style={styles.header}>
+            <Text style={styles.appTitle}>{t('appTitle')}</Text>
+            <TouchableOpacity onPress={() => setSettingsModalVisible(true)} style={styles.settingsIcon}>
+              <Ionicons name="settings-sharp" size={28} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          {isSaved ? (
+            <View style={styles.savedStateContainer}>
+              <Text style={styles.savedStateTitle}>{t('savedTitle')}</Text>
+              <Text style={styles.savedStateText}>{t('savedText')}</Text>
+              
+              <TouchableOpacity 
+                style={styles.quitButton} 
+                onPress={() => BackHandler.exitApp()}
+              >
+                <Text style={styles.quitButtonText}>{t('quitAppBtn')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.resetButton} 
+                onPress={() => {
+                  LayoutAnimation.configureNext(CustomFastFade);
+                  setIsSaved(false);
+                  setShowConfetti(false);
+                  setPrice('');
+                  setUses('');
+                  setShowEquivalents(false);
+                  setShowDetails(false);
+                }}
+              >
+                <Text style={styles.resetButtonText}>{t('resetCalcBtn')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <View style={styles.inputSection}>
+                <Text style={styles.label}>{t('priceLabel')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                  <TextInput
+                    ref={priceInputRef}
+                    style={styles.priceInput}
+                    keyboardType="decimal-pad"
+                    value={price}
+                    onChangeText={(val) => {
+                      setPrice(val);
+                      setIsSaved(false);
+                      setShowConfetti(false);
+                      setIsCostRevealed(false);
+                      setShowDetails(false);
+                    }}
+                    placeholder={t('pricePlaceholder')}
+                    placeholderTextColor={colors.textSecondary}
+                    maxLength={10}
+                    returnKeyType="next"
+                    onSubmitEditing={() => usesInputRef.current?.focus()}
+                    blurOnSubmit={false}
+                  />
+                  <Text style={{ fontSize: 48, color: (!price || price === '') ? colors.textSecondary : colors.primary, fontWeight: 'bold', marginLeft: 4 }}>{currencySym}</Text>
+                </View>
+              </View>
+
+              <View style={styles.inputSection}>
+                <Text style={styles.label}>{t('usesLabel')}</Text>
+                <View style={styles.usesInputContainer}>
+                  <TextInput
+                    ref={usesInputRef}
+                    style={styles.usesInput}
+                    keyboardType="numeric"
+                    value={uses}
+                    placeholder="1"
+                    placeholderTextColor={colors.textSecondary}
+                    onChangeText={(val) => {
+                      const cleaned = val.replace(/[^0-9]/g, '');
+                      setUses(cleaned);
+                    }}
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                      Keyboard.dismiss();
+                      if (parsedPrice > 0) {
+                        LayoutAnimation.configureNext(CustomFastFade);
+                        setIsCostRevealed(true);
+                        playKaching();
+                        showInterstitialAdMaybe();
+                      }
+                    }}
+                  />
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={1}
+                  maximumValue={1000}
+                  step={1}
+                  value={parseInt(uses) || 1}
+                  onValueChange={handleSliderChange}
+                  onSlidingComplete={() => {
+                    Keyboard.dismiss();
+                    if (parsedPrice > 0) {
+                      LayoutAnimation.configureNext(CustomFastFade);
+                      setIsCostRevealed(true);
+                      playKaching();
+                      showInterstitialAdMaybe();
+                    }
+                  }}
+                  minimumTrackTintColor={colors.secondary}
+                  maximumTrackTintColor={colors.surface}
+                  thumbTintColor={colors.secondary}
+                />
+              </View>
+
+              {parsedPrice > 0 ? (
+                <View style={styles.resultsContainer}>
+                  <Animated.View style={[styles.resultCard, { transform: [{ scale: scaleAnim }] }]}>
+                    <Text style={styles.resultLabel}>{t('resultMainLabel')}</Text>
+                    <Text style={styles.resultValuePrimary}>{formatTimeResult(timeCost)}</Text>
+                    <Text style={styles.resultSubtext}>{t('resultMainSubtext')}</Text>
+                  </Animated.View>
+
+                  <View style={styles.row}>
+                    <View style={[styles.resultCard, styles.halfCard]}>
+                      <Text style={styles.resultLabel}>{t('resultCostPerUse')}</Text>
+                      <Text style={styles.resultValueSecondary}>{costPerUse.toFixed(2)} {currencySym}</Text>
+                    </View>
+                    <View style={[styles.resultCard, styles.halfCard]}>
+                      <Text style={styles.resultLabel}>{t('resultTimePerUse')}</Text>
+                      <Text style={styles.resultValueSecondary}>{formatTimeResult(timePerUse)}</Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.detailsToggle}
+                    onPress={() => {
+                      LayoutAnimation.configureNext(CustomFastFade);
+                      setShowDetails(!showDetails);
+                    }}
+                  >
+                    <Text style={styles.detailsToggleText}>
+                      ⓘ {t('showDetailsBtn')} {showDetails ? '▲' : '▼'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showDetails && (
+                    <View style={styles.detailsContainer}>
+                      <Text style={styles.detailsText}>
+                        {t('calcStep1_pt1')} ({settings.salary} - {taxAmount}) / {monthlyHours}h = {hourlyRate.toFixed(2)} {currencySym}/h
+                      </Text>
+                      <Text style={styles.detailsText}>
+                        {t('calcStep2_pt1')} {parsedPrice} {currencySym} / {hourlyRate.toFixed(2)} {currencySym}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Nouvelles actions Fun */}
+                  <View style={styles.actionsContainer}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancelBuy}>
+                      <Text style={styles.cancelButtonText}>{t('cancelBtn')}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={styles.equivalentsToggle} 
+                      onPress={() => setShowEquivalents(!showEquivalents)}
+                    >
+                      <Text style={styles.equivalentsToggleText}>
+                        {t('buyInsteadBtn')} {showEquivalents ? '▲' : '▼'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Affichage conditionnel des Equivalents */}
+                  {showEquivalents && (
+                    <View style={styles.equivalentsContainer}>
+                      <Text style={styles.equivalentsTitle}>{t('equivalentsTitle')}</Text>
+                      
+                      <View style={styles.equivalentRow}>
+                        <Text style={styles.equivalentIcon}>🍝</Text>
+                        <View style={styles.equivalentInfo}>
+                          <Text style={styles.equivalentName}>{t('eqPasta')}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 0.8)}</Text>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.equivalentRow}>
+                        <Text style={styles.equivalentIcon}>☕</Text>
+                        <View style={styles.equivalentInfo}>
+                          <Text style={styles.equivalentName}>{t('eqCoffee')}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 5.0)}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.equivalentRow}>
+                        <Text style={styles.equivalentIcon}>📚</Text>
+                        <View style={styles.equivalentInfo}>
+                          <Text style={styles.equivalentName}>{t('eqBook')}</Text>
+                          <Text style={styles.equivalentValue}>{Math.floor(parsedPrice / 8.0)}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.equivalentRow}>
+                        <Text style={styles.equivalentIcon}>📈</Text>
+                        <View style={styles.equivalentInfo}>
+                          <Text style={styles.equivalentName}>{t('eqSP500')}</Text>
+                          <Text style={styles.equivalentValue}>~{(parsedPrice * 10.83).toFixed(2)} {currencySym}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View style={styles.emptyStateContainer}>
+                  <Text style={styles.emptyStateText}>{t('emptyState')}</Text>
+                </View>
+              )}
+            </>
+          )}
+        </ScrollView>
+      </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+
+      {/* Animation de Confettis */}
+      {showConfetti && (
+        <View key={confettiKey} style={StyleSheet.absoluteFill} pointerEvents="none">
+          <ConfettiCannon 
+            count={200} 
+            origin={{ x: -10, y: 0 }} 
+            fallSpeed={3000} 
+            fadeOut 
+          />
+        </View>
+      )}
+
+      <SettingsModal
+        visible={settingsModalVisible}
+        onSave={handleSaveSettings}
+        onClose={() => setSettingsModalVisible(false)}
+        initialData={settings}
+      />
+
+      {!isLoadingPremium && !isAdFree && isTrialActive && (
+        <TouchableOpacity style={styles.trialBanner} onPress={showPaywall}>
+          <Text style={styles.trialText}>{t('supportMessage')}</Text>
+        </TouchableOpacity>
+      )}
+
+      {!isLoadingPremium && !isAdFree && !isTrialActive && (
+        <View style={styles.bannerContainer}>
+          <BannerAd
+            unitId={TestIds.BANNER}
+            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+            requestOptions={{
+              requestNonPersonalizedAdsOnly: true,
+            }}
+          />
+        </View>
+      )}
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    padding: spacing.m,
+    flexGrow: 1,
+    paddingBottom: 80,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    marginTop: spacing.s,
+  },
+  appTitle: {
+    color: colors.text,
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  settingsIcon: {
+    padding: spacing.s,
+  },
+  inputSection: {
+    marginBottom: spacing.l,
+    backgroundColor: colors.surface,
+    padding: spacing.m,
+    borderRadius: borderRadius.l,
+  },
+  label: {
+    color: colors.textSecondary,
+    fontSize: 16,
+    marginBottom: spacing.s,
+  },
+  priceInput: {
+    fontSize: 48,
+    color: colors.primary,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    padding: spacing.s,
+  },
+  usesInputContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.m,
+  },
+  usesInput: {
+    fontSize: 32,
+    color: colors.secondary,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.secondary,
+    minWidth: 100,
+    paddingBottom: spacing.xs,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  resultsContainer: {
+    marginTop: spacing.xs,
+  },
+  resultCard: {
+    backgroundColor: colors.surface,
+    padding: spacing.l,
+    borderRadius: borderRadius.l,
+    marginBottom: spacing.m,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  halfCard: {
+    width: '48%',
+    padding: spacing.m,
+  },
+  resultLabel: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginBottom: spacing.s,
+    textAlign: 'center',
+  },
+  resultValuePrimary: {
+    color: colors.primary,
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 255, 102, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  resultValueSecondary: {
+    color: colors.secondary,
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  resultSubtext: {
+    color: colors.textSecondary,
+    fontSize: 16,
+  },
+  detailsToggle: {
+    paddingVertical: spacing.s,
+    alignItems: 'center',
+    marginBottom: spacing.m,
+  },
+  detailsToggleText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  detailsContainer: {
+    backgroundColor: colors.surface,
+    padding: spacing.m,
+    borderRadius: borderRadius.m,
+    marginBottom: spacing.l,
+    alignItems: 'center',
+  },
+  detailsText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  actionsContainer: {
+    marginTop: spacing.l,
+    gap: spacing.m,
+  },
+  cancelButton: {
+    backgroundColor: '#00D4FF',
+    padding: spacing.l,
+    borderRadius: borderRadius.l,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  equivalentsToggle: {
+    alignItems: 'center',
+    padding: spacing.s,
+  },
+  equivalentsToggleText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  equivalentsContainer: {
+    backgroundColor: colors.surface,
+    padding: spacing.l,
+    borderRadius: borderRadius.l,
+    marginTop: spacing.m,
+    marginBottom: spacing.xxl,
+  },
+  equivalentsTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: spacing.m,
+    textAlign: 'center',
+  },
+  equivalentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E1E1E',
+    padding: spacing.m,
+    borderRadius: borderRadius.m,
+    marginBottom: spacing.s,
+  },
+  equivalentIcon: {
+    fontSize: 24,
+    marginRight: spacing.m,
+  },
+  equivalentInfo: {
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  equivalentName: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  equivalentValue: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  bannerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: spacing.xs,
+  },
+  trialBanner: {
+    backgroundColor: '#1E1E1E',
+    padding: spacing.m,
+    marginHorizontal: spacing.m,
+    marginBottom: spacing.m,
+    borderRadius: borderRadius.m,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+  },
+  trialText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing.xxl,
+  },
+  emptyStateText: {
+    color: colors.textSecondary,
+    fontSize: 16,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
+    lineHeight: 24,
+  },
+  savedStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing.xxl,
+  },
+  savedStateTitle: {
+    color: colors.primary,
+    fontSize: 40,
+    fontWeight: 'bold',
+    marginBottom: spacing.l,
+  },
+  savedStateText: {
+    color: colors.text,
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: spacing.xxl,
+    lineHeight: 28,
+  },
+  quitButton: {
+    backgroundColor: '#FF3366',
+    padding: spacing.l,
+    borderRadius: borderRadius.l,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: spacing.l,
+  },
+  quitButtonText: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  resetButton: {
+    padding: spacing.m,
+  },
+  resetButtonText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+});
+
+
+========================================================
+File: src/theme/theme.js
+========================================================
+
+export const colors = {
+  background: '#121212',
+  surface: '#1E1E1E',
+  primary: '#00FF66', // Neon Green
+  secondary: '#00D4FF', // Electric Blue
+  text: '#FFFFFF',
+  textSecondary: '#A0A0A0',
+  error: '#FF3366',
+};
+
+export const spacing = {
+  xs: 4,
+  s: 8,
+  m: 16,
+  l: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const borderRadius = {
+  s: 4,
+  m: 8,
+  l: 12,
+  xl: 16,
+};
+
+
+========================================================
+File: src/utils/calculations.js
+========================================================
+
+export const calculateHourlyRate = (monthlySalary, hoursPerWeek, taxRate = 0) => {
+  if (!monthlySalary || !hoursPerWeek) return 0;
+  const netSalary = monthlySalary * (1 - taxRate / 100);
+  // Formule du taux horaire = Salaire mensuel Net Reste à Vivre / (Heures par semaine × 4.33).
+  return netSalary / (hoursPerWeek * 4.33);
+};
+
+export const calculateWorkDayHours = (hoursPerWeek) => {
+  if (!hoursPerWeek) return 0;
+  // Formule d'une journée de travail = Heures par semaine / 5.
+  return hoursPerWeek / 5;
+};
+
+export const convertCostToTime = (price, hourlyRate, workDayHours) => {
+  if (!price || !hourlyRate || !workDayHours) return { days: 0, hours: 0, minutes: 0 };
+
+  const totalHours = price / hourlyRate;
+
+  let days = Math.floor(totalHours / workDayHours);
+  let remainingHours = totalHours - (days * workDayHours);
+
+  let hours = Math.floor(remainingHours);
+  let minutes = Math.round((remainingHours - hours) * 60);
+
+  // Garde-fou : Math.round peut retourner 60 quand la fraction est ≥ 0.995
+  if (minutes === 60) {
+    minutes = 0;
+    hours += 1;
+  }
+  if (hours >= workDayHours) {
+    hours = 0;
+    days += 1;
+  }
+
+  return { days, hours, minutes };
+};
+
+
+========================================================
+File: src/utils/storage.js
+========================================================
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const SETTINGS_KEY = '@LifeCost_Settings';
+
+export const saveSettings = async (settings) => {
+  try {
+    const jsonValue = JSON.stringify(settings);
+    await AsyncStorage.setItem(SETTINGS_KEY, jsonValue);
+  } catch (e) {
+    console.error('Error saving settings', e);
+  }
+};
+
+export const loadSettings = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(SETTINGS_KEY);
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (e) {
+    console.error('Error loading settings', e);
+    return null;
+  }
+};
